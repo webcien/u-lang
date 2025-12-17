@@ -1,0 +1,76 @@
+{
+  "name": "u-language",
+  "displayName": "U Language",
+  "description": "Language support for U Language",
+  "version": "1.4.0",
+  "publisher": "webcien",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "u",
+    "u-lang",
+    "systems",
+    "programming"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcien/u-lang"
+  },
+  "license": "MIT",
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "u",
+        "aliases": [
+          "U",
+          "u"
+        ],
+        "extensions": [
+          ".ul"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "u",
+        "scopeName": "source.u",
+        "path": "./syntaxes/u.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "U Language",
+      "properties": {
+        "u.lsp.path": {
+          "type": "string",
+          "default": "u-lsp",
+          "description": "Path to the U Language Server executable"
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:u"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}

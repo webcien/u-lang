@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "U",
+  "patterns": [
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#comments" },
+    { "include": "#numbers" },
+    { "include": "#functions" },
+    { "include": "#types" }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.u",
+          "match": "\\b(if|else|while|for|return|break|continue|match|unsafe|spawn|send|await)\\b"
+        },
+        {
+          "name": "keyword.other.u",
+          "match": "\\b(fn|let|mut|const|type|trait|impl|actor|ui|extern)\\b"
+        },
+        {
+          "name": "storage.modifier.u",
+          "match": "\\b(pub|priv)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.u",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.u",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.u",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.u",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.u",
+          "match": "\\b[0-9][0-9_]*(\\.[0-9][0-9_]*)?([eE][+-]?[0-9][0-9_]*)?\\b"
+        },
+        {
+          "name": "constant.numeric.hex.u",
+          "match": "\\b0x[0-9a-fA-F][0-9a-fA-F_]*\\b"
+        },
+        {
+          "name": "constant.numeric.binary.u",
+          "match": "\\b0b[01][01_]*\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.u",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.u",
+          "match": "\\b(i32|i64|f32|f64|bool|str|ptr|Option|Result|Vec|HashMap)\\b"
+        },
+        {
+          "name": "entity.name.type.u",
+          "match": "\\b([A-Z][a-zA-Z0-9_]*)\\b"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.u"
+}

@@ -1,0 +1,12 @@
+/home/ubuntu/u-lang/lsp/target/release/deps/lsp_server-64f05c1c0e035801.d: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/msg.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/req_queue.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/socket.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/stdio.rs
+
+/home/ubuntu/u-lang/lsp/target/release/deps/liblsp_server-64f05c1c0e035801.rlib: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/msg.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/req_queue.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/socket.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/stdio.rs
+
+/home/ubuntu/u-lang/lsp/target/release/deps/liblsp_server-64f05c1c0e035801.rmeta: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/error.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/msg.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/req_queue.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/socket.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/stdio.rs
+
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/lib.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/error.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/msg.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/req_queue.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/socket.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lsp-server-0.7.9/src/stdio.rs:
