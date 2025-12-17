@@ -1,7 +1,7 @@
 // c.rs — U v0.7 C Code Generator
 // MIT License — Copyright (c) 2025 Webcien and U contributors
 
-use crate::parser::{BinaryOp, Declaration, Expression, Function, Literal, Statement, Type, UnaryOp};
+use crate::parser::{BinaryOp, Declaration, Expression, Function, Literal, Statement, Type, UnaryOp, Actor, Trait, TypeDef, TraitImpl};
 use std::collections::HashSet;
 use std::fmt::Write;
 
@@ -81,8 +81,16 @@ impl CGenerator {
         match decl {
             Declaration::Function(f) => self.generate_function(f),
             Declaration::Actor(_) => {
-                // Actors not implemented in MVP → omitted
-                // In v0.7+: generate structs + mailbox functions
+                // Actors: struct generation deferred to v0.9
+            }
+            Declaration::Trait(_) => {
+                // Traits: vtable generation deferred to v0.9
+            }
+            Declaration::TypeDef(_) => {
+                // Type definitions: struct generation deferred to v0.9
+            }
+            Declaration::TraitImpl(_) => {
+                // Trait implementations: method generation deferred to v0.9
             }
         }
     }
@@ -136,6 +144,8 @@ impl CGenerator {
             Type::Result(ok, _) => {
                 format!("struct {{ {} value; int is_ok; }}", self.type_to_c(ok))
             }
+            Type::Custom(name) => format!("struct {}", name),
+            Type::Generic { name, type_args: _ } => format!("struct {}", name),
         }
     }
 

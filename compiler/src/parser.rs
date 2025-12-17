@@ -1,4 +1,4 @@
-// parser.rs — U v0.6
+// parser.rs — U v0.8 Parser with Traits and Generics
 // MIT License — Copyright (c) 2025 Webcien and U contributors
 
 use crate::lexer::{Token, TokenType};
@@ -10,6 +10,11 @@ pub enum Type {
     Bool,
     Option(Box<Type>),
     Result(Box<Type>, Box<Type>),
+    Custom(String),
+    Generic {
+        name: String,
+        type_args: Vec<Type>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -74,7 +79,7 @@ pub enum Literal {
 pub enum Statement {
     Let {
         name: String,
-        mutable: bool, // false = let, true = var
+        mutable: bool,
         value: Expression,
     },
     Expr(Expression),
@@ -103,6 +108,7 @@ pub struct Function {
     pub params: Vec<(String, Type)>,
     pub return_type: Option<Type>,
     pub body: Vec<Statement>,
+    pub type_params: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -112,9 +118,41 @@ pub struct Actor {
 }
 
 #[derive(Debug, Clone)]
+pub struct Trait {
+    pub name: String,
+    pub methods: Vec<TraitMethod>,
+    pub type_params: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TraitMethod {
+    pub name: String,
+    pub params: Vec<(String, Type)>,
+    pub return_type: Option<Type>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TypeDef {
+    pub name: String,
+    pub fields: Vec<(String, Type)>,
+    pub type_params: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TraitImpl {
+    pub trait_name: String,
+    pub type_name: String,
+    pub methods: Vec<Function>,
+    pub type_args: Vec<Type>,
+}
+
+#[derive(Debug, Clone)]
 pub enum Declaration {
     Function(Function),
     Actor(Actor),
+    Trait(Trait),
+    TypeDef(TypeDef),
+    TraitImpl(TraitImpl),
 }
 
 pub struct Parser {
@@ -189,9 +227,33 @@ impl Parser {
             Ok(Declaration::Function(self.parse_function()?))
         } else if self.match_token(TokenType::Actor) {
             Ok(Declaration::Actor(self.parse_actor()?))
+        } else if self.peek().kind == TokenType::Identifier(String::new()) {
+            // Check for trait, type, or impl
+            let ident = if let TokenType::Identifier(s) = &self.peek().kind {
+                s.clone()
+            } else {
+                String::new()
+            };
+
+            if ident == "trait" {
+                self.advance();
+                Ok(Declaration::Trait(self.parse_trait()?))
+            } else if ident == "type" {
+                self.advance();
+                Ok(Declaration::TypeDef(self.parse_type_def()?))
+            } else if ident == "impl" {
+                self.advance();
+                Ok(Declaration::TraitImpl(self.parse_trait_impl()?))
+            } else {
+                Err(format!(
+                    "Expected 'fn', 'actor', 'trait', 'type', or 'impl', got {:?} at line {}",
+                    self.peek().kind,
+                    self.peek().line
+                ))
+            }
         } else {
             Err(format!(
-                "Expected 'fn' or 'actor', got {:?} at line {}",
+                "Expected declaration, got {:?} at line {}",
                 self.peek().kind,
                 self.peek().line
             ))
@@ -206,6 +268,19 @@ impl Parser {
         let name = match &name_token.kind {
             TokenType::Identifier(s) => s.clone(),
             _ => return Err("Invalid function name".to_string()),
+        };
+
+        // Parse type parameters if present
+        let type_params = if self.match_token(TokenType::LessThan) {
+            let mut params = Vec::new();
+            params.push(self.parse_type_param()?);
+            while self.match_token(TokenType::Comma) {
+                params.push(self.parse_type_param()?);
+            }
+            self.consume(TokenType::GreaterThan, "Expected '>' after type parameters")?;
+            params
+        } else {
+            Vec::new()
         };
 
         self.consume(TokenType::LeftParen, "Expected '(' after function name")?;
@@ -230,6 +305,7 @@ impl Parser {
             params,
             return_type,
             body,
+            type_params,
         })
     }
 
@@ -241,16 +317,193 @@ impl Parser {
         };
 
         let body = self.parse_block()?;
-        // In MVP, we assume that all declarations in the block are methods
         let mut methods = Vec::new();
         for _stmt in body {
-            // Note: This is simplified. In practice, we would need to distinguish
-            // between method declaration and statement within the actor.
-            // For MVP, we assume only methods (without complex initial state).
-            return Err("Actor parsing not fully implemented in MVP parser".to_string());
+            return Err("Actor parsing not fully implemented in v0.8 parser".to_string());
         }
 
         Ok(Actor { name, methods })
+    }
+
+    fn parse_trait(&mut self) -> Result<Trait, String> {
+        let name_token = self.consume(TokenType::Identifier(String::new()), "Expected trait name")?;
+        let name = match &name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid trait name".to_string()),
+        };
+
+        let type_params = if self.match_token(TokenType::LessThan) {
+            let mut params = Vec::new();
+            params.push(self.parse_type_param()?);
+            while self.match_token(TokenType::Comma) {
+                params.push(self.parse_type_param()?);
+            }
+            self.consume(TokenType::GreaterThan, "Expected '>' after type parameters")?;
+            params
+        } else {
+            Vec::new()
+        };
+
+        self.consume(TokenType::LeftBrace, "Expected '{' after trait name")?;
+        let mut methods = Vec::new();
+
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            if self.match_token(TokenType::Fn) {
+                let method = self.parse_trait_method()?;
+                methods.push(method);
+            } else {
+                return Err("Expected 'fn' in trait".to_string());
+            }
+        }
+
+        self.consume(TokenType::RightBrace, "Expected '}' after trait body")?;
+
+        Ok(Trait {
+            name,
+            methods,
+            type_params,
+        })
+    }
+
+    fn parse_trait_method(&mut self) -> Result<TraitMethod, String> {
+        let name_token = self.consume(TokenType::Identifier(String::new()), "Expected method name")?;
+        let name = match &name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid method name".to_string()),
+        };
+
+        self.consume(TokenType::LeftParen, "Expected '(' after method name")?;
+        let mut params = Vec::new();
+        if !self.check(TokenType::RightParen) {
+            params.push(self.parse_param()?);
+            while self.match_token(TokenType::Comma) {
+                params.push(self.parse_param()?);
+            }
+        }
+        self.consume(TokenType::RightParen, "Expected ')' after parameters")?;
+
+        let return_type = if self.match_token(TokenType::Arrow) {
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
+
+        self.consume(TokenType::Semicolon, "Expected ';' after trait method")?;
+
+        Ok(TraitMethod {
+            name,
+            params,
+            return_type,
+        })
+    }
+
+    fn parse_type_def(&mut self) -> Result<TypeDef, String> {
+        let name_token = self.consume(TokenType::Identifier(String::new()), "Expected type name")?;
+        let name = match &name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid type name".to_string()),
+        };
+
+        let type_params = if self.match_token(TokenType::LessThan) {
+            let mut params = Vec::new();
+            params.push(self.parse_type_param()?);
+            while self.match_token(TokenType::Comma) {
+                params.push(self.parse_type_param()?);
+            }
+            self.consume(TokenType::GreaterThan, "Expected '>' after type parameters")?;
+            params
+        } else {
+            Vec::new()
+        };
+
+        self.consume(TokenType::LeftBrace, "Expected '{' after type name")?;
+        let mut fields = Vec::new();
+
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            let field_name_token = self.consume(TokenType::Identifier(String::new()), "Expected field name")?;
+            let field_name = match &field_name_token.kind {
+                TokenType::Identifier(s) => s.clone(),
+                _ => return Err("Invalid field name".to_string()),
+            };
+
+            self.consume(TokenType::Colon, "Expected ':' after field name")?;
+            let field_type = self.parse_type()?;
+
+            fields.push((field_name, field_type));
+
+            if !self.check(TokenType::RightBrace) {
+                self.consume(TokenType::Comma, "Expected ',' after field")?;
+            }
+        }
+
+        self.consume(TokenType::RightBrace, "Expected '}' after type body")?;
+
+        Ok(TypeDef {
+            name,
+            fields,
+            type_params,
+        })
+    }
+
+    fn parse_trait_impl(&mut self) -> Result<TraitImpl, String> {
+        let trait_name_token = self.consume(TokenType::Identifier(String::new()), "Expected trait name")?;
+        let trait_name = match &trait_name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid trait name".to_string()),
+        };
+
+        let type_args = if self.match_token(TokenType::LessThan) {
+            let mut args = Vec::new();
+            args.push(self.parse_type()?);
+            while self.match_token(TokenType::Comma) {
+                args.push(self.parse_type()?);
+            }
+            self.consume(TokenType::GreaterThan, "Expected '>' after type arguments")?;
+            args
+        } else {
+            Vec::new()
+        };
+
+        if let TokenType::Identifier(s) = &self.peek().kind {
+            if s == "for" {
+                self.advance();
+            }
+        }
+
+        let type_name_token = self.consume(TokenType::Identifier(String::new()), "Expected type name")?;
+        let type_name = match &type_name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid type name".to_string()),
+        };
+
+        self.consume(TokenType::LeftBrace, "Expected '{' after impl header")?;
+        let mut methods = Vec::new();
+
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            if self.match_token(TokenType::Fn) {
+                let method = self.parse_function()?;
+                methods.push(method);
+            } else {
+                return Err("Expected 'fn' in impl block".to_string());
+            }
+        }
+
+        self.consume(TokenType::RightBrace, "Expected '}' after impl body")?;
+
+        Ok(TraitImpl {
+            trait_name,
+            type_name,
+            methods,
+            type_args,
+        })
+    }
+
+    fn parse_type_param(&mut self) -> Result<String, String> {
+        let token = self.consume(TokenType::Identifier(String::new()), "Expected type parameter")?;
+        match &token.kind {
+            TokenType::Identifier(s) => Ok(s.clone()),
+            _ => Err("Invalid type parameter".to_string()),
+        }
     }
 
     fn parse_param(&mut self) -> Result<(String, Type), String> {
@@ -284,6 +537,24 @@ impl Parser {
             let err_type = self.parse_type()?;
             self.consume(TokenType::GreaterThan, "Expected '>' after Result types")?;
             Ok(Type::Result(Box::new(ok_type), Box::new(err_type)))
+        } else if self.check(TokenType::Identifier(String::new())) {
+            let name_token = self.advance();
+            let name = match &name_token.kind {
+                TokenType::Identifier(s) => s.clone(),
+                _ => return Err("Invalid type name".to_string()),
+            };
+
+            if self.match_token(TokenType::LessThan) {
+                let mut type_args = Vec::new();
+                type_args.push(self.parse_type()?);
+                while self.match_token(TokenType::Comma) {
+                    type_args.push(self.parse_type()?);
+                }
+                self.consume(TokenType::GreaterThan, "Expected '>' after type arguments")?;
+                Ok(Type::Generic { name, type_args })
+            } else {
+                Ok(Type::Custom(name))
+            }
         } else {
             Err(format!(
                 "Expected type, got {:?} at line {}",
@@ -382,8 +653,7 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Result<Expression, String> {
         let expr = self.parse_or()?;
-        
-        // Check if this is an assignment
+
         if self.match_token(TokenType::Equal) {
             if let Expression::Identifier(target) = expr {
                 let value = self.parse_assignment()?;
@@ -395,7 +665,7 @@ impl Parser {
                 return Err("Invalid assignment target".to_string());
             }
         }
-        
+
         Ok(expr)
     }
 
@@ -526,90 +796,113 @@ impl Parser {
     fn parse_unary(&mut self) -> Result<Expression, String> {
         if self.match_token(TokenType::Not) {
             let operand = self.parse_unary()?;
-            Ok(Expression::Unary {
+            return Ok(Expression::Unary {
                 operator: UnaryOp::Not,
                 operand: Box::new(operand),
-            })
-        } else if self.match_token(TokenType::Minus) {
+            });
+        }
+
+        if self.match_token(TokenType::Minus) {
             let operand = self.parse_unary()?;
-            Ok(Expression::Unary {
+            return Ok(Expression::Unary {
                 operator: UnaryOp::Negate,
                 operand: Box::new(operand),
-            })
-        } else {
-            self.parse_call()
+            });
         }
+
+        self.parse_call()
     }
 
     fn parse_call(&mut self) -> Result<Expression, String> {
-        // In MVP: we support only calls, literals and identifiers
-        if self.check(TokenType::StringLiteral(String::new())) {
-            let token = self.advance();
-            let value = match &token.kind {
-                TokenType::StringLiteral(s) => s.clone(),
-                _ => unreachable!(),
-            };
-            Ok(Expression::Literal(Literal::String(value)))
-        } else if self.check(TokenType::IntegerLiteral(0)) {
-            let token = self.advance();
-            let value = match &token.kind {
-                TokenType::IntegerLiteral(n) => *n,
-                _ => unreachable!(),
-            };
-            Ok(Expression::Literal(Literal::Integer(value)))
-        } else if self.check(TokenType::Identifier(String::new())) {
-            let token = self.advance();
-            let ident = match &token.kind {
-                TokenType::Identifier(s) => s.clone(),
-                _ => unreachable!(),
-            };
+        let mut expr = self.parse_primary()?;
 
-            if self.check(TokenType::LeftParen) {
-                // Function call
-                self.advance(); // consume '('
-                let mut args = Vec::new();
+        loop {
+            if self.match_token(TokenType::LeftParen) {
+                let name = match expr {
+                    Expression::Identifier(ref n) => n.clone(),
+                    _ => return Err("Can only call functions".to_string()),
+                };
+
+                let mut arguments = Vec::new();
                 if !self.check(TokenType::RightParen) {
-                    args.push(self.parse_expression()?);
+                    arguments.push(self.parse_expression()?);
                     while self.match_token(TokenType::Comma) {
-                        args.push(self.parse_expression()?);
+                        arguments.push(self.parse_expression()?);
                     }
                 }
-                self.consume(TokenType::RightParen, "Expected ')' after function arguments")?;
-                Ok(Expression::FunctionCall {
-                    name: ident,
-                    arguments: args,
-                })
-            } else if self.check(TokenType::Dot) {
-                // Method call: receiver.method(...)
-                self.advance(); // consume '.'
+                self.consume(TokenType::RightParen, "Expected ')' after arguments")?;
+
+                expr = Expression::FunctionCall { name, arguments };
+            } else if self.match_token(TokenType::Dot) {
                 let method_token = self.consume(TokenType::Identifier(String::new()), "Expected method name")?;
                 let method = match &method_token.kind {
                     TokenType::Identifier(s) => s.clone(),
                     _ => return Err("Invalid method name".to_string()),
                 };
-                self.consume(TokenType::LeftParen, "Expected '(' after method name")?;
-                let mut args = Vec::new();
-                if !self.check(TokenType::RightParen) {
-                    args.push(self.parse_expression()?);
-                    while self.match_token(TokenType::Comma) {
-                        args.push(self.parse_expression()?);
+
+                let receiver = match expr {
+                    Expression::Identifier(ref n) => n.clone(),
+                    _ => return Err("Can only call methods on identifiers".to_string()),
+                };
+
+                if self.match_token(TokenType::LeftParen) {
+                    let mut arguments = Vec::new();
+                    if !self.check(TokenType::RightParen) {
+                        arguments.push(self.parse_expression()?);
+                        while self.match_token(TokenType::Comma) {
+                            arguments.push(self.parse_expression()?);
+                        }
                     }
+                    self.consume(TokenType::RightParen, "Expected ')' after method arguments")?;
+
+                    expr = Expression::MethodCall {
+                        receiver,
+                        method,
+                        arguments,
+                    };
+                } else {
+                    expr = Expression::MethodCall {
+                        receiver,
+                        method,
+                        arguments: Vec::new(),
+                    };
                 }
-                self.consume(TokenType::RightParen, "Expected ')' after method arguments")?;
-                Ok(Expression::MethodCall {
-                    receiver: ident,
-                    method,
-                    arguments: args,
-                })
             } else {
-                Ok(Expression::Identifier(ident))
+                break;
             }
-        } else {
-            Err(format!(
-                "Unexpected token in expression: {:?} at line {}",
+        }
+
+        Ok(expr)
+    }
+
+    fn parse_primary(&mut self) -> Result<Expression, String> {
+        if self.match_token(TokenType::LeftParen) {
+            let expr = self.parse_expression()?;
+            self.consume(TokenType::RightParen, "Expected ')' after expression")?;
+            return Ok(expr);
+        }
+
+        match &self.peek().kind {
+            TokenType::IntegerLiteral(n) => {
+                let n = *n;
+                self.advance();
+                Ok(Expression::Literal(Literal::Integer(n)))
+            }
+            TokenType::StringLiteral(s) => {
+                let s = s.clone();
+                self.advance();
+                Ok(Expression::Literal(Literal::String(s)))
+            }
+            TokenType::Identifier(name) => {
+                let name = name.clone();
+                self.advance();
+                Ok(Expression::Identifier(name))
+            }
+            _ => Err(format!(
+                "Unexpected token: {:?} at line {}",
                 self.peek().kind,
                 self.peek().line
-            ))
+            )),
         }
     }
 }

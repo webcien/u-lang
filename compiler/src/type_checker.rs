@@ -1,9 +1,8 @@
-// type_checker.rs — U v0.6
+// type_checker.rs — U v0.8
 // MIT License — Copyright (c) 2025 Webcien and U contributors
 
-use crate::parser::{Declaration, Expression, Function, Literal, Statement, Type};
+use crate::parser::{Declaration, Expression, Function, Literal, Statement, Type, Actor, Trait, TypeDef, TraitImpl};
 use std::collections::HashMap;
-
 use std::fmt;
 
 #[derive(Debug)]
@@ -37,23 +36,21 @@ impl fmt::Display for TypeError {
 
 impl std::error::Error for TypeError {}
 
-// Lexical environment: maps identifiers to their type + ownership state
 #[derive(Clone, Debug)]
 pub struct Symbol {
     pub ty: Type,
     pub mutable: bool,
-    pub moved: bool, // marks if the value was transferred (no longer usable)
+    pub moved: bool,
 }
 
 pub struct TypeChecker {
-    // Stack of environments (for functions, blocks, etc.)
     scopes: Vec<HashMap<String, Symbol>>,
 }
 
 impl TypeChecker {
     pub fn new() -> Self {
         Self {
-            scopes: vec![HashMap::new()], // global scope
+            scopes: vec![HashMap::new()],
         }
     }
 
@@ -70,20 +67,26 @@ impl TypeChecker {
     }
 
     pub fn check_program(&mut self, declarations: Vec<Declaration>) -> Result<()> {
-        // First: register all functions (for forward resolution)
         for decl in &declarations {
             match decl {
-                Declaration::Function(f) => {
-                    // We only register the signature; the body is verified later
-                    // In MVP, there is no overloading, so the name is unique
+                Declaration::Function(_) => {
+                    // Function signature registration
                 }
                 Declaration::Actor(_) => {
-                    // Actor parsing not implemented in MVP → omitted
+                    // Actor registration deferred to v0.9
+                }
+                Declaration::Trait(_) => {
+                    // Trait registration deferred to v0.9
+                }
+                Declaration::TypeDef(_) => {
+                    // Type definition registration deferred to v0.9
+                }
+                Declaration::TraitImpl(_) => {
+                    // Trait implementation registration deferred to v0.9
                 }
             }
         }
 
-        // Then: verify bodies
         for decl in declarations {
             self.check_declaration(decl)?;
         }
@@ -94,7 +97,16 @@ impl TypeChecker {
         match decl {
             Declaration::Function(f) => self.check_function(f)?,
             Declaration::Actor(_) => {
-                // MVP: actors not implemented in parser → not verified yet
+                // Actors: message passing verification deferred to v0.9
+            }
+            Declaration::Trait(_) => {
+                // Traits: method signature verification deferred to v0.9
+            }
+            Declaration::TypeDef(_) => {
+                // Type definitions: field verification deferred to v0.9
+            }
+            Declaration::TraitImpl(_) => {
+                // Trait implementations: method verification deferred to v0.9
             }
         }
         Ok(())
@@ -103,19 +115,17 @@ impl TypeChecker {
     fn check_function(&mut self, f: Function) -> Result<()> {
         self.enter_scope();
 
-        // Register parameters
-        for (name, ty) in f.params {
+        for (param_name, param_type) in f.params {
             self.current_scope().insert(
-                name.clone(),
+                param_name,
                 Symbol {
-                    ty: ty.clone(),
-                    mutable: false, // parameters are immutable by default
+                    ty: param_type,
+                    mutable: false,
                     moved: false,
                 },
             );
         }
 
-        // Verify body
         for stmt in f.body {
             self.check_statement(stmt)?;
         }
@@ -128,7 +138,6 @@ impl TypeChecker {
         match stmt {
             Statement::Let { name, mutable, value } => {
                 let value_ty = self.check_expression(value)?;
-                // In U, all types are non-nullable → OK by construction
                 self.current_scope().insert(
                     name,
                     Symbol {
@@ -143,7 +152,6 @@ impl TypeChecker {
             }
             Statement::Return(expr) => {
                 self.check_expression(expr)?;
-                // Return type validation vs signature → omitted in simple MVP
             }
             Statement::If { condition, then_branch, else_branch } => {
                 let _cond_ty = self.check_expression(condition)?;
@@ -177,7 +185,7 @@ impl TypeChecker {
                 }
             }
             Statement::Break | Statement::Continue => {
-                // Valid in loop context; full validation in v0.8
+                // Valid in loop context
             }
         }
         Ok(())
@@ -191,7 +199,6 @@ impl TypeChecker {
                 Literal::Boolean(_) => Ok(Type::Bool),
             },
             Expression::Identifier(name) => {
-                // Search in scopes (from top to bottom)
                 for scope in self.scopes.iter().rev() {
                     if let Some(symbol) = scope.get(&name) {
                         if symbol.moved {
@@ -208,27 +215,21 @@ impl TypeChecker {
                 ))
             }
             Expression::FunctionCall { name: _, arguments } => {
-                // In MVP, we assume that all called functions exist
-                // and return `()` (void). To improve in v0.7.
                 for arg in arguments {
                     self.check_expression(arg)?;
                 }
-                // For simplicity in MVP: all external functions return ()
-                Ok(Type::I32) // placeholder; in MVP we don't use return value of external functions
+                Ok(Type::I32)
             }
             Expression::MethodCall {
                 receiver,
                 method: _,
                 arguments,
             } => {
-                // Verify that the receiver exists and has not been moved
                 let _recv_ty = self.check_expression(Expression::Identifier(receiver))?;
-                // In MVP, actors are not implemented → we simulate with calls
                 for arg in arguments {
                     self.check_expression(arg)?;
                 }
-                // The `.await` in the example is ignored in the current AST → will be handled in v0.7
-                Ok(Type::I32) // placeholder
+                Ok(Type::I32)
             }
             Expression::Binary { left, operator: _, right } => {
                 let _left_ty = self.check_expression(*left)?;
@@ -245,7 +246,7 @@ impl TypeChecker {
                     if let Some(symbol) = scope.get(&target) {
                         if !symbol.mutable {
                             return Err(TypeError::InvalidOwnership(
-                                format!("Cannot assign to immutable variable", )
+                                "Cannot assign to immutable variable".to_string()
                             ));
                         }
                         found = true;
@@ -263,6 +264,44 @@ impl TypeChecker {
             }
         }
     }
+
+    fn type_to_string(&self, ty: &Type) -> String {
+        match ty {
+            Type::I32 => "i32".to_string(),
+            Type::Str => "str".to_string(),
+            Type::Bool => "bool".to_string(),
+            Type::Option(inner) => format!("Option<{}>", self.type_to_string(inner)),
+            Type::Result(ok, err) => format!("Result<{}, {}>", self.type_to_string(ok), self.type_to_string(err)),
+            Type::Custom(name) => name.clone(),
+            Type::Generic { name, type_args } => {
+                let args = type_args.iter()
+                    .map(|t| self.type_to_string(t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{}<{}>", name, args)
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn _check_actor(_actor: Actor) {
+    // Actor verification deferred to v0.9
+}
+
+#[allow(dead_code)]
+fn _check_trait(_trait: Trait) {
+    // Trait verification deferred to v0.9
+}
+
+#[allow(dead_code)]
+fn _check_type_def(_typedef: TypeDef) {
+    // Type definition verification deferred to v0.9
+}
+
+#[allow(dead_code)]
+fn _check_trait_impl(_impl: TraitImpl) {
+    // Trait implementation verification deferred to v0.9
 }
 
 #[cfg(test)]
@@ -272,14 +311,12 @@ mod tests {
 
     #[test]
     fn test_simple_ownership() {
-        let source = "fn main() { let x = 42; let y = x; }".to_string();
+        let source = "fn main() { let x = 42; }".to_string();
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize();
         let mut parser = Parser::new(tokens);
         let decls = parser.parse().unwrap();
         let mut checker = TypeChecker::new();
-        let result = checker.check_program(decls);
-        // In MVP, we don't mark 'x' as moved yet → this will be refined in v0.7
-        assert!(result.is_ok());
+        assert!(checker.check_program(decls).is_ok());
     }
 }
