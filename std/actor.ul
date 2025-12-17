@@ -1,0 +1,101 @@
+// actor.ul — U Lang Standard Library: Actor-Based Concurrency
+// MIT License — Copyright (c) 2025 Webcien and U Lang contributors
+//
+// This module provides the actor model for safe concurrent programming.
+// Actors communicate exclusively through message passing, preventing data races.
+//
+// Key principles:
+// - Each actor has a unique identity and mailbox
+// - Communication is asynchronous via message passing
+// - No shared memory access → data races impossible by design
+// - Micro-runtime manages scheduling and lifecycle
+
+// Actor Definition Syntax:
+//
+// actor MyActor {
+//     var state: i32 = 0
+//     
+//     fn handle_message(msg: i32) {
+//         state = state + msg;
+//     }
+//     
+//     fn get_state() -> i32 {
+//         return state;
+//     }
+// }
+
+// spawn() -> ActorRef — Create a new actor instance
+// Returns a reference that can be used to send messages
+//
+// Example:
+//   let actor_ref = MyActor.spawn();
+//   actor_ref.send(Message::Increment(5));
+
+// send(message: Message) — Send a message to an actor
+// Non-blocking: returns immediately
+// Message is queued in actor's mailbox
+//
+// Example:
+//   actor_ref.send(Message::Increment(5));
+
+// await — Wait for actor response (async operation)
+// Blocks until actor processes message and responds
+//
+// Example:
+//   let result = actor_ref.get_state().await;
+
+// Actor Mailbox: Internal message queue
+// - FIFO (First-In-First-Out) ordering
+// - Bounded size (default: 1024 messages)
+// - Overflow handling: drop or backpressure (v0.8+)
+
+// Cooperative Scheduling:
+// - No preemption: actors yield control explicitly
+// - Prevents context switch overhead
+// - Deterministic behavior for testing
+
+// Actor Lifecycle:
+// 1. Creation: spawn() creates new actor with initial state
+// 2. Running: actor processes messages from mailbox
+// 3. Termination: actor stops when all references are dropped
+
+// Example: Counter Actor
+//
+// actor Counter {
+//     var count: i32 = 0
+//     
+//     fn increment() {
+//         count = count + 1;
+//     }
+//     
+//     fn get() -> i32 {
+//         return count;
+//     }
+// }
+//
+// fn main() {
+//     let counter = Counter.spawn();
+//     counter.increment();
+//     counter.increment();
+//     let value = counter.get().await;
+//     print(value);  // Output: 2
+// }
+
+// Message Passing Patterns:
+//
+// 1. Fire-and-Forget:
+//    actor_ref.send(Message::Log("Hello"));
+//
+// 2. Request-Response:
+//    let result = actor_ref.request(Message::Query).await;
+//
+// 3. Broadcast:
+//    for actor in actors {
+//        actor.send(message.clone());
+//    }
+
+// Runtime Configuration (v0.8+):
+// - Thread pool size
+// - Mailbox capacity
+// - Timeout behavior
+// - Monitoring and metrics

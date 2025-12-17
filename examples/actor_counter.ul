@@ -1,0 +1,46 @@
+// actor_counter.ul — Example of actor-based concurrency in U v0.8
+// This example demonstrates the actor model with message passing
+
+actor Counter {
+    var count: i32 = 0
+    
+    fn increment() {
+        count = count + 1;
+    }
+    
+    fn decrement() {
+        count = count - 1;
+    }
+    
+    fn get() -> i32 {
+        return count;
+    }
+    
+    fn reset() {
+        count = 0;
+    }
+}
+
+fn main() {
+    // Spawn a new counter actor
+    let counter = Counter.spawn();
+    
+    // Send messages to the actor
+    counter.increment();
+    counter.increment();
+    counter.increment();
+    
+    // Get the current value
+    let value = counter.get().await;
+    print(value);  // Output: 3
+    
+    // Decrement
+    counter.decrement();
+    let value2 = counter.get().await;
+    print(value2);  // Output: 2
+    
+    // Reset
+    counter.reset();
+    let value3 = counter.get().await;
+    print(value3);  // Output: 0
+}

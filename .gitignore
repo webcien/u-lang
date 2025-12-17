@@ -1,0 +1,37 @@
+# Rust build artifacts
+/compiler/target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Generated files
+*.c
+hello
+test_lexer
+loops_while
+loops_for
+conditionals_if
+arithmetic
+stdlib_usage
+actor_counter
+traits_example
+
+# Temporary files
+*.tmp
+*.bak

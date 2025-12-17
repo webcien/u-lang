@@ -1,0 +1,24 @@
+            Expression::Assignment { target, value } => {
+                // Verify that target is a mutable variable
+                let mut found = false;
+                for scope in self.scopes.iter().rev() {
+                    if let Some(symbol) = scope.get(&target) {
+                        if !symbol.mutable {
+                            return Err(TypeError::InvalidOwnership(
+                                format!("Cannot assign to immutable variable '{}'", target)
+                            ));
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    return Err(TypeError::UnknownVariable(
+                        target.clone(),
+                        "in current scope".to_string(),
+                    ));
+                }
+                
+                let _value_ty = self.check_expression(*value)?;
+                Ok(Type::I32)
+            }

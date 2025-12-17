@@ -1,0 +1,58 @@
+// mem.ul — U Lang Standard Library: Memory Management
+// MIT License — Copyright (c) 2025 Webcien and U Lang contributors
+//
+// This module provides memory management utilities and ownership helpers.
+// In U Lang, memory is managed through ownership rules:
+// - Each value has exactly one owner
+// - Ownership transfers on assignment or function call
+// - Deep copies require explicit .clone() method
+
+// clone(value: T) -> T — Create a deep copy of a value
+// In MVP, this is a placeholder. In v0.8+, will be a generic method.
+//
+// Example:
+//   let x = 42;
+//   let y = x.clone();  // y is a separate copy
+
+// drop(value: T) — Explicitly drop a value, freeing its resources
+// In MVP, this is a no-op since we don't have complex resources.
+// In v0.8+, will trigger destructors for types with cleanup logic.
+//
+// Example:
+//   let x = create_resource();
+//   drop(x);  // x is no longer usable
+
+// size_of(value: T) -> i32 — Return the size in bytes of a type
+// Placeholder for v0.8+. Returns 0 in MVP.
+fn size_of() -> i32 {
+    return 0;
+}
+
+// align_of(value: T) -> i32 — Return the alignment requirement of a type
+// Placeholder for v0.8+. Returns 1 in MVP.
+fn align_of() -> i32 {
+    return 1;
+}
+
+// Ownership Rules Documentation:
+//
+// 1. Single Ownership:
+//    let x = 42;
+//    let y = x;  // x is moved to y, x is no longer valid
+//
+// 2. Mutable Ownership:
+//    var x = 42;
+//    x = 100;    // x can be reassigned
+//
+// 3. Immutable Ownership:
+//    let x = 42;
+//    x = 100;    // ERROR: cannot assign to immutable variable
+//
+// 4. Function Parameter Transfer:
+//    fn consume(value: i32) { ... }
+//    let x = 42;
+//    consume(x);  // x is moved into function, no longer valid after call
+//
+// 5. Return Value Transfer:
+//    fn produce() -> i32 { return 42; }
+//    let x = produce();  // ownership of result transfers to x

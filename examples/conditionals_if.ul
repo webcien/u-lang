@@ -1,0 +1,8 @@
+fn main() {
+    let x = 42;
+    if x > 40 {
+        print(1);
+    } else {
+        print(0);
+    }
+}

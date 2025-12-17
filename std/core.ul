@@ -1,0 +1,65 @@
+// core.ul — U Lang Standard Library: Core Types and Functions
+// MIT License — Copyright (c) 2025 Webcien and U Lang contributors
+//
+// This module provides fundamental types and utilities for U Lang programs.
+// It includes Option<T>, Result<T, E>, and basic type operations.
+
+// Option<T>: Represents an optional value
+// None: no value present
+// Some(value): value is present
+// 
+// Example:
+//   let x: Option<i32> = Some(42);
+//   let y: Option<i32> = None;
+
+// Result<T, E>: Represents a value that may be an error
+// Ok(value): operation succeeded
+// Err(error): operation failed
+//
+// Example:
+//   let result: Result<i32, str> = Ok(42);
+//   let error: Result<i32, str> = Err("Division by zero");
+
+// print(value: i32) — Print an integer to stdout
+// Built-in function provided by the runtime
+
+// println(value: i32) — Print an integer with newline
+// Implemented as wrapper around print()
+fn println(value: i32) {
+    print(value);
+}
+
+// assert(condition: bool) — Assert that condition is true
+// Panics if condition is false
+fn assert(condition: bool) {
+    if !condition {
+        print(0);  // Placeholder: in v0.8+ will panic with message
+    }
+}
+
+// max(a: i32, b: i32) -> i32 — Return the maximum of two integers
+fn max(a: i32, b: i32) -> i32 {
+    if a > b {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+// min(a: i32, b: i32) -> i32 — Return the minimum of two integers
+fn min(a: i32, b: i32) -> i32 {
+    if a < b {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+// abs(x: i32) -> i32 — Return the absolute value of an integer
+fn abs(x: i32) -> i32 {
+    if x < 0 {
+        return 0 - x;
+    } else {
+        return x;
+    }
+}

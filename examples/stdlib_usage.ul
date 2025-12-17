@@ -1,0 +1,36 @@
+fn main() {
+    let a = 10;
+    let b = 20;
+    
+    let maximum = max(a, b);
+    let minimum = min(a, b);
+    let absolute = abs(0 - 15);
+    
+    print(maximum);
+    print(minimum);
+    print(absolute);
+}
+
+fn max(x: i32, y: i32) -> i32 {
+    if x > y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+fn min(x: i32, y: i32) -> i32 {
+    if x < y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+fn abs(x: i32) -> i32 {
+    if x < 0 {
+        return 0 - x;
+    } else {
+        return x;
+    }
+}

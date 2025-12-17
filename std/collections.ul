@@ -1,0 +1,141 @@
+// collections.ul — U Lang Standard Library: Collections
+// MIT License — Copyright (c) 2025 Webcien and U Lang contributors
+//
+// This module provides collection types and operations.
+// Includes arrays, vectors, and maps for data management.
+
+// Array<T>: Fixed-size collection of elements
+// Example:
+//   let arr: Array<i32> = [1, 2, 3, 4, 5];
+//   let first = arr[0];
+//   let length = arr.len();
+
+// Vec<T>: Dynamic vector (growable array)
+// Example:
+//   let mut vec: Vec<i32> = Vec::new();
+//   vec.push(1);
+//   vec.push(2);
+//   let item = vec.pop();
+
+// Map<K, V>: Hash map for key-value pairs
+// Example:
+//   let mut map: Map<str, i32> = Map::new();
+//   map.insert("key", 42);
+//   let value = map.get("key");
+
+// String operations
+fn string_length(s: str) -> i32 {
+    // Placeholder: returns 0 in MVP
+    return 0;
+}
+
+fn string_concat(s1: str, s2: str) -> str {
+    // Placeholder: concatenates strings
+    return s1;
+}
+
+fn string_substring(s: str, start: i32, end: i32) -> str {
+    // Placeholder: returns substring
+    return s;
+}
+
+fn string_contains(s: str, pattern: str) -> i32 {
+    // Placeholder: checks if string contains pattern
+    return 0;
+}
+
+fn string_split(s: str, delimiter: str) -> str {
+    // Placeholder: splits string by delimiter
+    return s;
+}
+
+// Array operations
+fn array_len(arr: str) -> i32 {
+    // Placeholder: returns array length
+    return 0;
+}
+
+fn array_get(arr: str, index: i32) -> i32 {
+    // Placeholder: returns element at index
+    return 0;
+}
+
+fn array_set(arr: str, index: i32, value: i32) {
+    // Placeholder: sets element at index
+}
+
+fn array_push(arr: str, value: i32) {
+    // Placeholder: appends element to array
+}
+
+fn array_pop(arr: str) -> i32 {
+    // Placeholder: removes and returns last element
+    return 0;
+}
+
+// Vector operations
+fn vec_new() -> str {
+    // Placeholder: creates new vector
+    return "";
+}
+
+fn vec_push(vec: str, value: i32) {
+    // Placeholder: pushes element to vector
+}
+
+fn vec_pop(vec: str) -> i32 {
+    // Placeholder: pops element from vector
+    return 0;
+}
+
+fn vec_len(vec: str) -> i32 {
+    // Placeholder: returns vector length
+    return 0;
+}
+
+// Map operations
+fn map_new() -> str {
+    // Placeholder: creates new map
+    return "";
+}
+
+fn map_insert(map: str, key: str, value: i32) {
+    // Placeholder: inserts key-value pair
+}
+
+fn map_get(map: str, key: str) -> i32 {
+    // Placeholder: gets value by key
+    return 0;
+}
+
+fn map_remove(map: str, key: str) -> i32 {
+    // Placeholder: removes key-value pair
+    return 0;
+}
+
+fn map_contains(map: str, key: str) -> i32 {
+    // Placeholder: checks if key exists
+    return 0;
+}
+
+// Iterator support (v0.9+)
+// fn iter(collection: str) -> Iterator {
+//     // Placeholder: returns iterator
+// }
+//
+// fn next(iterator: Iterator) -> Option<i32> {
+//     // Placeholder: gets next element
+// }
+
+// Functional operations (v0.9+)
+// fn map(collection: str, f: fn(i32) -> i32) -> str {
+//     // Placeholder: applies function to each element
+// }
+//
+// fn filter(collection: str, f: fn(i32) -> i32) -> str {
+//     // Placeholder: filters elements
+// }
+//
+// fn fold(collection: str, init: i32, f: fn(i32, i32) -> i32) -> i32 {
+//     // Placeholder: folds collection
+// }

@@ -1,0 +1,61 @@
+// traits_example.ul — Example of trait implementation in U v0.8
+// Demonstrates the trait system for shared behavior
+
+trait Drawable {
+    fn draw();
+    fn erase();
+}
+
+trait Movable {
+    fn move_to(x: i32, y: i32);
+    fn get_x() -> i32;
+    fn get_y() -> i32;
+}
+
+// Rectangle implements both Drawable and Movable
+type Rectangle {
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
+impl Drawable for Rectangle {
+    fn draw() {
+        print(1);  // Placeholder: would draw the rectangle
+    }
+    
+    fn erase() {
+        print(0);  // Placeholder: would erase the rectangle
+    }
+}
+
+impl Movable for Rectangle {
+    fn move_to(x: i32, y: i32) {
+        // Update position
+    }
+    
+    fn get_x() -> i32 {
+        return 0;  // Placeholder
+    }
+    
+    fn get_y() -> i32 {
+        return 0;  // Placeholder
+    }
+}
+
+fn main() {
+    let rect = Rectangle { x: 10, y: 20, width: 100, height: 50 };
+    
+    // Use trait methods
+    rect.draw();
+    rect.move_to(30, 40);
+    
+    let x = rect.get_x();
+    let y = rect.get_y();
+    
+    print(x);
+    print(y);
+    
+    rect.erase();
+}

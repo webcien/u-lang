@@ -1,0 +1,9 @@
+            Expression::Binary { left, operator: _, right } => {
+                let _left_ty = self.check_expression(*left)?;
+                let _right_ty = self.check_expression(*right)?;
+                Ok(Type::I32)
+            }
+            Expression::Unary { operator: _, operand } => {
+                let _op_ty = self.check_expression(*operand)?;
+                Ok(Type::I32)
+            }

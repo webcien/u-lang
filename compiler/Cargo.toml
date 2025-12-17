@@ -1,0 +1,30 @@
+[package]
+name = "u"
+version = "0.6.0"
+edition = "2021"
+authors = ["Webcien <u-lang@webcien.com>"]
+description = "U: A modern, safe, and lightweight systems programming language."
+homepage = "https://github.com/webcien/u-lang"
+repository = "https://github.com/webcien/u-lang"
+license = "MIT"
+readme = "../README.md"
+categories = ["compilers", "development-tools", "programming-language"]
+keywords = ["u", "ul", "safe", "systems", "zig", "multiplatform"]
+
+[[bin]]
+name = "ul"  # ← Nombre del comando: `ul build archivo.ul`
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 1
+debug = true
