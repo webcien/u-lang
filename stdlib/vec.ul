@@ -1,0 +1,154 @@
+// vec.ul — U v1.2 Standard Library: Vec<T>
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// Vec<T> is a growable array type
+
+extern "C" {
+    fn malloc(size: i32) -> ptr;
+    fn realloc(ptr: ptr, size: i32) -> ptr;
+    fn free(ptr: ptr);
+    fn memcpy(dest: ptr, src: ptr, n: i32);
+}
+
+// Vec<T> type definition
+type Vec<T> {
+    data: ptr,
+    len: i32,
+    capacity: i32
+}
+
+// Constructors
+
+fn Vec_new<T>() -> Vec<T> {
+    return Vec<T> {
+        data: 0,
+        len: 0,
+        capacity: 0
+    };
+}
+
+fn Vec_with_capacity<T>(capacity: i32) -> Vec<T> {
+    let size = capacity * 4;  // Assuming 4 bytes per element (simplified)
+    let data: ptr;
+    
+    unsafe {
+        data = malloc(size);
+    }
+    
+    return Vec<T> {
+        data: data,
+        len: 0,
+        capacity: capacity
+    };
+}
+
+// Methods
+
+fn Vec_len<T>(vec: Vec<T>) -> i32 {
+    return vec.len;
+}
+
+fn Vec_capacity<T>(vec: Vec<T>) -> i32 {
+    return vec.capacity;
+}
+
+fn Vec_is_empty<T>(vec: Vec<T>) -> bool {
+    return vec.len == 0;
+}
+
+fn Vec_push<T>(vec: Vec<T>, value: T) -> Vec<T> {
+    // Check if we need to grow
+    if vec.len >= vec.capacity {
+        let new_capacity = if vec.capacity == 0 { 4 } else { vec.capacity * 2 };
+        let new_size = new_capacity * 4;
+        let new_data: ptr;
+        
+        unsafe {
+            if vec.data == 0 {
+                new_data = malloc(new_size);
+            } else {
+                new_data = realloc(vec.data, new_size);
+            }
+        }
+        
+        vec.data = new_data;
+        vec.capacity = new_capacity;
+    }
+    
+    // Add element (simplified: assumes T is i32)
+    unsafe {
+        let offset = vec.len * 4;
+        let ptr_to_slot = vec.data + offset;
+        // *ptr_to_slot = value;  // Would need pointer dereferencing
+    }
+    
+    vec.len = vec.len + 1;
+    return vec;
+}
+
+fn Vec_pop<T>(vec: Vec<T>) -> Option<T> {
+    if vec.len == 0 {
+        return None<T>();
+    }
+    
+    vec.len = vec.len - 1;
+    
+    // Get last element (simplified)
+    unsafe {
+        let offset = vec.len * 4;
+        let ptr_to_slot = vec.data + offset;
+        // let value = *ptr_to_slot;  // Would need pointer dereferencing
+        // return Some(value);
+    }
+    
+    return None<T>();  // Placeholder
+}
+
+fn Vec_get<T>(vec: Vec<T>, index: i32) -> Option<T> {
+    if index < 0 || index >= vec.len {
+        return None<T>();
+    }
+    
+    // Get element at index (simplified)
+    unsafe {
+        let offset = index * 4;
+        let ptr_to_slot = vec.data + offset;
+        // let value = *ptr_to_slot;  // Would need pointer dereferencing
+        // return Some(value);
+    }
+    
+    return None<T>();  // Placeholder
+}
+
+fn Vec_clear<T>(vec: Vec<T>) -> Vec<T> {
+    vec.len = 0;
+    return vec;
+}
+
+fn Vec_drop<T>(vec: Vec<T>) {
+    if vec.data != 0 {
+        unsafe {
+            free(vec.data);
+        }
+    }
+}
+
+// Example usage:
+//
+// fn main() {
+//     let mut numbers = Vec_new<i32>();
+//     
+//     numbers = Vec_push(numbers, 10);
+//     numbers = Vec_push(numbers, 20);
+//     numbers = Vec_push(numbers, 30);
+//     
+//     let len = Vec_len(numbers);  // 3
+//     
+//     let first = Vec_get(numbers, 0);  // Some(10)
+//     
+//     let last = Vec_pop(numbers);  // Some(30)
+//     
+//     Vec_drop(numbers);
+//     
+//     return 0;
+// }

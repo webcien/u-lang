@@ -1,0 +1,96 @@
+// option.ul — U v1.2 Standard Library: Option<T>
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// Option<T> represents an optional value: every Option is either Some(T) or None
+
+// Option<T> type definition
+type Option<T> {
+    is_some: bool,
+    value: T
+}
+
+// Constructors
+
+fn Some<T>(value: T) -> Option<T> {
+    return Option<T> {
+        is_some: true,
+        value: value
+    };
+}
+
+fn None<T>() -> Option<T> {
+    return Option<T> {
+        is_some: false,
+        value: 0  // Default value (will be ignored)
+    };
+}
+
+// Methods
+
+fn is_some<T>(opt: Option<T>) -> bool {
+    return opt.is_some;
+}
+
+fn is_none<T>(opt: Option<T>) -> bool {
+    return !opt.is_some;
+}
+
+fn unwrap<T>(opt: Option<T>) -> T {
+    if opt.is_some {
+        return opt.value;
+    } else {
+        // Panic: unwrap called on None
+        unsafe {
+            extern "C" fn panic(msg: ptr);
+            panic("unwrap() called on None");
+        }
+        return opt.value;  // Unreachable
+    }
+}
+
+fn unwrap_or<T>(opt: Option<T>, default: T) -> T {
+    if opt.is_some {
+        return opt.value;
+    } else {
+        return default;
+    }
+}
+
+fn map<T, U>(opt: Option<T>, f: fn(T) -> U) -> Option<U> {
+    if opt.is_some {
+        return Some(f(opt.value));
+    } else {
+        return None<U>();
+    }
+}
+
+fn and_then<T, U>(opt: Option<T>, f: fn(T) -> Option<U>) -> Option<U> {
+    if opt.is_some {
+        return f(opt.value);
+    } else {
+        return None<U>();
+    }
+}
+
+// Example usage:
+//
+// fn divide(a: i32, b: i32) -> Option<i32> {
+//     if b == 0 {
+//         return None<i32>();
+//     } else {
+//         return Some(a / b);
+//     }
+// }
+//
+// fn main() {
+//     let result = divide(10, 2);
+//     if is_some(result) {
+//         let value = unwrap(result);
+//         // value is 5
+//     }
+//     
+//     let safe_result = unwrap_or(divide(10, 0), 0);
+//     // safe_result is 0
+//     
+//     return 0;
+// }

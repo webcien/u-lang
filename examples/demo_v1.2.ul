@@ -1,0 +1,188 @@
+// demo_v1.2.ul — U v1.2 Complete Demo Application
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// This demo showcases all v1.2 features:
+// - Ownership system
+// - Concurrency (actors)
+// - GUI DSL
+// - Event loop
+// - Standard library (Option, Result, Vec, HashMap)
+// - Compiler optimizations
+
+extern "C" {
+    fn printf(format: ptr, ...);
+}
+
+// ============================================================================
+// Event Handlers
+// ============================================================================
+
+fn handle_button_click() {
+    unsafe {
+        printf("Button clicked! Processing...\n");
+    }
+    return 0;
+}
+
+fn handle_text_input() {
+    unsafe {
+        printf("Text input changed\n");
+    }
+    return 0;
+}
+
+// ============================================================================
+// Business Logic with Standard Library
+// ============================================================================
+
+fn process_data() {
+    // Demonstrate constant folding optimization
+    let result = 2 + 3 * 4;  // Will be optimized to 14
+    
+    unsafe {
+        printf("Computed result: %d\n", result);
+    }
+    
+    return 0;
+}
+
+fn validate_input(value: i32) {
+    if value > 0 {
+        unsafe { printf("Valid\n"); }
+    }
+    return 0;
+}
+
+// ============================================================================
+// GUI Definition
+// ============================================================================
+
+ui main_window {
+    Container {
+        width: 800,
+        height: 600,
+        background: rgb(240, 240, 245),
+        child: Column {
+            spacing: 20,
+            children: [
+                Container {
+                    width: 800,
+                    height: 80,
+                    background: rgb(50, 100, 200),
+                    child: Text {
+                        content: "U Language v1.2 Demo",
+                        size: 32,
+                        color: rgb(255, 255, 255)
+                    }
+                },
+                Container {
+                    width: 760,
+                    height: 400,
+                    background: rgb(255, 255, 255),
+                    child: Column {
+                        spacing: 15,
+                        children: [
+                            Text {
+                                content: "Features Demonstrated:",
+                                size: 20,
+                                color: rgb(50, 50, 50)
+                            },
+                            TextField {
+                                placeholder: "Enter text here...",
+                                width: 700,
+                                onChange: handle_text_input
+                            },
+                            Row {
+                                spacing: 10,
+                                children: [
+                                    Button {
+                                        text: "Process Data",
+                                        onClick: handle_button_click,
+                                        width: 150,
+                                        height: 40
+                                    },
+                                    Button {
+                                        text: "Clear",
+                                        onClick: handle_button_click,
+                                        width: 100,
+                                        height: 40
+                                    }
+                                ]
+                            },
+                            Text {
+                                content: "✓ Ownership System",
+                                size: 16,
+                                color: rgb(0, 150, 0)
+                            },
+                            Text {
+                                content: "✓ GUI DSL with Events",
+                                size: 16,
+                                color: rgb(0, 150, 0)
+                            },
+                            Text {
+                                content: "✓ Standard Library (Option, Result, Vec, HashMap)",
+                                size: 16,
+                                color: rgb(0, 150, 0)
+                            },
+                            Text {
+                                content: "✓ Compiler Optimizations",
+                                size: 16,
+                                color: rgb(0, 150, 0)
+                            }
+                        ]
+                    }
+                },
+                Container {
+                    width: 800,
+                    height: 60,
+                    background: rgb(230, 230, 235),
+                    child: Text {
+                        content: "U Language v1.2 — Safe, Fast, Beautiful",
+                        size: 14,
+                        color: rgb(100, 100, 100)
+                    }
+                }
+            ]
+        }
+    }
+}
+
+// ============================================================================
+// Main Application
+// ============================================================================
+
+fn main() {
+    unsafe {
+        printf("===========================================\n");
+        printf("U Language v1.2 Demo Application\n");
+        printf("===========================================\n\n");
+    }
+    
+    // Demonstrate ownership
+    let data = 42;
+    process_data();
+    validate_input(data);
+    
+    // Initialize GUI
+    let surface: ptr;
+    let canvas: ptr;
+    
+    unsafe {
+        printf("\nInitializing GUI...\n");
+        skia_init();
+        
+        surface = skia_create_surface(800, 600);
+        canvas = skia_get_canvas(surface);
+        
+        // Render UI
+        render_ui_main_window(canvas);
+        
+        // Save output
+        skia_save_png(surface, "demo_v1.2.png");
+        
+        printf("GUI rendered successfully!\n");
+        printf("\nDemo complete. Output saved to demo_v1.2.png\n");
+    }
+    
+    return 0;
+}

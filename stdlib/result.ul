@@ -1,0 +1,124 @@
+// result.ul — U v1.2 Standard Library: Result<T, E>
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// Result<T, E> represents either success (Ok) or failure (Err)
+
+// Result<T, E> type definition
+type Result<T, E> {
+    is_ok: bool,
+    ok_value: T,
+    err_value: E
+}
+
+// Constructors
+
+fn Ok<T, E>(value: T) -> Result<T, E> {
+    return Result<T, E> {
+        is_ok: true,
+        ok_value: value,
+        err_value: 0  // Default (will be ignored)
+    };
+}
+
+fn Err<T, E>(error: E) -> Result<T, E> {
+    return Result<T, E> {
+        is_ok: false,
+        ok_value: 0,  // Default (will be ignored)
+        err_value: error
+    };
+}
+
+// Methods
+
+fn is_ok<T, E>(result: Result<T, E>) -> bool {
+    return result.is_ok;
+}
+
+fn is_err<T, E>(result: Result<T, E>) -> bool {
+    return !result.is_ok;
+}
+
+fn unwrap<T, E>(result: Result<T, E>) -> T {
+    if result.is_ok {
+        return result.ok_value;
+    } else {
+        // Panic: unwrap called on Err
+        unsafe {
+            extern "C" fn panic(msg: ptr);
+            panic("unwrap() called on Err");
+        }
+        return result.ok_value;  // Unreachable
+    }
+}
+
+fn unwrap_or<T, E>(result: Result<T, E>, default: T) -> T {
+    if result.is_ok {
+        return result.ok_value;
+    } else {
+        return default;
+    }
+}
+
+fn unwrap_err<T, E>(result: Result<T, E>) -> E {
+    if !result.is_ok {
+        return result.err_value;
+    } else {
+        // Panic: unwrap_err called on Ok
+        unsafe {
+            extern "C" fn panic(msg: ptr);
+            panic("unwrap_err() called on Ok");
+        }
+        return result.err_value;  // Unreachable
+    }
+}
+
+fn map<T, E, U>(result: Result<T, E>, f: fn(T) -> U) -> Result<U, E> {
+    if result.is_ok {
+        return Ok<U, E>(f(result.ok_value));
+    } else {
+        return Err<U, E>(result.err_value);
+    }
+}
+
+fn map_err<T, E, F>(result: Result<T, E>, f: fn(E) -> F) -> Result<T, F> {
+    if result.is_ok {
+        return Ok<T, F>(result.ok_value);
+    } else {
+        return Err<T, F>(f(result.err_value));
+    }
+}
+
+fn and_then<T, E, U>(result: Result<T, E>, f: fn(T) -> Result<U, E>) -> Result<U, E> {
+    if result.is_ok {
+        return f(result.ok_value);
+    } else {
+        return Err<U, E>(result.err_value);
+    }
+}
+
+// Example usage:
+//
+// fn parse_int(s: str) -> Result<i32, str> {
+//     // Simplified parsing
+//     if s == "42" {
+//         return Ok<i32, str>(42);
+//     } else {
+//         return Err<i32, str>("invalid number");
+//     }
+// }
+//
+// fn main() {
+//     let result = parse_int("42");
+//     if is_ok(result) {
+//         let value = unwrap(result);
+//         // value is 42
+//     } else {
+//         let error = unwrap_err(result);
+//         // error is "invalid number"
+//     }
+//     
+//     let safe_value = unwrap_or(parse_int("invalid"), 0);
+//     // safe_value is 0
+//     
+//     return 0;
+// }

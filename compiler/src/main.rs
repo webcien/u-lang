@@ -11,6 +11,7 @@ mod parser;
 mod type_checker;
 mod ownership_checker;
 mod concurrency_checker;
+mod optimizer;
 mod codegen;
 mod actor_runtime;
 mod traits;
@@ -143,8 +144,16 @@ fn build_command(input: &str, target: &str, no_link: bool) -> Result<(), Box<dyn
         eprintln!("❌ Concurrency error: {}", e);
         std::process::exit(1);
     }
+    
+    // 7. Optimization
+    let mut optimizer = optimizer::Optimizer::new();
+    let declarations = optimizer.optimize_program(declarations);
+    let opt_count = optimizer.get_optimizations_count();
+    if opt_count > 0 {
+        eprintln!("✓ Applied {} optimizations", opt_count);
+    }
 
-    // 7. C code generation
+    // 8. C code generation
     let mut codegen = codegen::c::CGenerator::new();
     let c_code = codegen.generate_program(declarations);
 

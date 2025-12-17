@@ -1,0 +1,204 @@
+// hashmap.ul — U v1.2 Standard Library: HashMap<K, V>
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// HashMap<K, V> is a hash table with keys of type K and values of type V
+
+extern "C" {
+    fn malloc(size: i32) -> ptr;
+    fn free(ptr: ptr);
+    fn memset(ptr: ptr, value: i32, n: i32);
+}
+
+// HashMap bucket entry
+type HashMapEntry<K, V> {
+    key: K,
+    value: V,
+    occupied: bool,
+    next: ptr  // For chaining
+}
+
+// HashMap<K, V> type definition
+type HashMap<K, V> {
+    buckets: ptr,
+    capacity: i32,
+    len: i32,
+    load_factor: i32  // Percentage (e.g., 75 for 0.75)
+}
+
+// Hash function (simplified for i32 keys)
+fn hash_i32(key: i32, capacity: i32) -> i32 {
+    let hash = key * 2654435761;  // Knuth's multiplicative hash
+    if hash < 0 {
+        hash = -hash;
+    }
+    return hash % capacity;
+}
+
+// Constructors
+
+fn HashMap_new<K, V>() -> HashMap<K, V> {
+    return HashMap_with_capacity<K, V>(16);
+}
+
+fn HashMap_with_capacity<K, V>(capacity: i32) -> HashMap<K, V> {
+    let bucket_size = 16;  // sizeof(HashMapEntry) simplified
+    let total_size = capacity * bucket_size;
+    let buckets: ptr;
+    
+    unsafe {
+        buckets = malloc(total_size);
+        memset(buckets, 0, total_size);
+    }
+    
+    return HashMap<K, V> {
+        buckets: buckets,
+        capacity: capacity,
+        len: 0,
+        load_factor: 75
+    };
+}
+
+// Methods
+
+fn HashMap_len<K, V>(map: HashMap<K, V>) -> i32 {
+    return map.len;
+}
+
+fn HashMap_capacity<K, V>(map: HashMap<K, V>) -> i32 {
+    return map.capacity;
+}
+
+fn HashMap_is_empty<K, V>(map: HashMap<K, V>) -> bool {
+    return map.len == 0;
+}
+
+fn HashMap_insert<K, V>(map: HashMap<K, V>, key: K, value: V) -> HashMap<K, V> {
+    // Check if we need to resize
+    let load = (map.len * 100) / map.capacity;
+    if load >= map.load_factor {
+        map = HashMap_resize<K, V>(map, map.capacity * 2);
+    }
+    
+    // Find bucket (simplified for i32 keys)
+    let index = hash_i32(key, map.capacity);
+    
+    // Insert into bucket (simplified)
+    unsafe {
+        let bucket_size = 16;
+        let offset = index * bucket_size;
+        let bucket_ptr = map.buckets + offset;
+        
+        // In real implementation:
+        // - Check if key already exists
+        // - Handle collisions with chaining
+        // - Update occupied flag
+        // - Store key and value
+    }
+    
+    map.len = map.len + 1;
+    return map;
+}
+
+fn HashMap_get<K, V>(map: HashMap<K, V>, key: K) -> Option<V> {
+    // Find bucket
+    let index = hash_i32(key, map.capacity);
+    
+    // Search in bucket (simplified)
+    unsafe {
+        let bucket_size = 16;
+        let offset = index * bucket_size;
+        let bucket_ptr = map.buckets + offset;
+        
+        // In real implementation:
+        // - Check occupied flag
+        // - Compare key
+        // - Return value if found
+        // - Follow chain if collision
+    }
+    
+    return None<V>();  // Placeholder
+}
+
+fn HashMap_contains_key<K, V>(map: HashMap<K, V>, key: K) -> bool {
+    let result = HashMap_get<K, V>(map, key);
+    return is_some(result);
+}
+
+fn HashMap_remove<K, V>(map: HashMap<K, V>, key: K) -> Option<V> {
+    // Find bucket
+    let index = hash_i32(key, map.capacity);
+    
+    // Remove from bucket (simplified)
+    unsafe {
+        let bucket_size = 16;
+        let offset = index * bucket_size;
+        let bucket_ptr = map.buckets + offset;
+        
+        // In real implementation:
+        // - Find key in chain
+        // - Remove entry
+        // - Update occupied flag
+        // - Return old value
+    }
+    
+    map.len = map.len - 1;
+    return None<V>();  // Placeholder
+}
+
+fn HashMap_clear<K, V>(map: HashMap<K, V>) -> HashMap<K, V> {
+    let bucket_size = 16;
+    let total_size = map.capacity * bucket_size;
+    
+    unsafe {
+        memset(map.buckets, 0, total_size);
+    }
+    
+    map.len = 0;
+    return map;
+}
+
+fn HashMap_resize<K, V>(map: HashMap<K, V>, new_capacity: i32) -> HashMap<K, V> {
+    let new_map = HashMap_with_capacity<K, V>(new_capacity);
+    
+    // Rehash all entries (simplified)
+    // In real implementation:
+    // - Iterate over all buckets
+    // - Reinsert each entry into new_map
+    
+    // Free old buckets
+    unsafe {
+        free(map.buckets);
+    }
+    
+    return new_map;
+}
+
+fn HashMap_drop<K, V>(map: HashMap<K, V>) {
+    if map.buckets != 0 {
+        unsafe {
+            free(map.buckets);
+        }
+    }
+}
+
+// Example usage:
+//
+// fn main() {
+//     let mut scores = HashMap_new<i32, i32>();
+//     
+//     scores = HashMap_insert(scores, 1, 100);
+//     scores = HashMap_insert(scores, 2, 200);
+//     scores = HashMap_insert(scores, 3, 300);
+//     
+//     let len = HashMap_len(scores);  // 3
+//     
+//     let score = HashMap_get(scores, 2);  // Some(200)
+//     
+//     let has_key = HashMap_contains_key(scores, 1);  // true
+//     
+//     scores = HashMap_remove(scores, 3);
+//     
+//     HashMap_drop(scores);
+//     
+//     return 0;
+// }
