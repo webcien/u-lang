@@ -14,6 +14,7 @@ mod concurrency_checker;
 mod optimizer;
 mod package_manager;
 mod generics;
+mod macro_expander;
 mod codegen;
 mod actor_runtime;
 mod traits;
