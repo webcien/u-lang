@@ -1,0 +1,10 @@
+extern "C" {
+    fn printf(format: ptr, ...) -> i32;
+}
+
+fn main() {
+    unsafe {
+        printf("Hello from FFI!\n");
+    }
+    return 0;
+}

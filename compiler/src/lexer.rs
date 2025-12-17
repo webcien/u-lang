@@ -17,6 +17,8 @@ pub enum TokenType {
     Continue,
     If,
     Else,
+    Extern,
+    Unsafe,
 
     // Literals
     Identifier(String),
@@ -50,6 +52,7 @@ pub enum TokenType {
     I32,
     Str,
     Bool,
+    Ptr,
     Option,
     Result,
     LessThan,       // <
@@ -392,9 +395,12 @@ impl Lexer {
                     "continue" => TokenType::Continue,
                     "if" => TokenType::If,
                     "else" => TokenType::Else,
+                    "extern" => TokenType::Extern,
+                    "unsafe" => TokenType::Unsafe,
                     "i32" => TokenType::I32,
                     "str" => TokenType::Str,
                     "bool" => TokenType::Bool,
+                    "ptr" => TokenType::Ptr,
                     "Option" => TokenType::Option,
                     "Result" => TokenType::Result,
                     _ => TokenType::Identifier(ident),

@@ -1,0 +1,15 @@
+extern "C" {
+    fn malloc(size: i32) -> ptr;
+    fn free(p: ptr);
+    fn printf(format: ptr, ...) -> i32;
+}
+
+fn main() {
+    unsafe {
+        var buffer = malloc(100);
+        printf("Allocated buffer at: %p\n", buffer);
+        free(buffer);
+        printf("Buffer freed\n");
+    }
+    return 0;
+}

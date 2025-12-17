@@ -58,7 +58,9 @@ impl CGenerator {
     }
 
     fn generate_function_prototype(&mut self, f: &Function) {
-        let return_type = if f.return_type.is_some() {
+        let return_type = if f.name == "main" {
+            "int"
+        } else if f.return_type.is_some() {
             "int"
         } else {
             "void"
@@ -92,6 +94,9 @@ impl CGenerator {
             Declaration::TraitImpl(_) => {
                 // Trait implementations: method generation deferred to v0.9
             }
+            Declaration::ExternBlock(block) => {
+                self.generate_extern_block(block);
+            }
         }
     }
 
@@ -102,8 +107,10 @@ impl CGenerator {
             self.current_params.insert(name.clone());
         }
 
-        // Return type (in MVP, we assume void or int)
-        let return_type = if f.return_type.is_some() {
+        // Return type (main always returns int, others based on signature)
+        let return_type = if f.name == "main" {
+            "int"
+        } else if f.return_type.is_some() {
             "int"
         } else {
             "void"
@@ -138,6 +145,7 @@ impl CGenerator {
             Type::I32 => "int".to_string(),
             Type::Bool => "int".to_string(),
             Type::Str => "const char*".to_string(),
+            Type::Ptr => "void*".to_string(),
             Type::Option(inner) => {
                 format!("struct {{ {} value; int is_some; }}", self.type_to_c(inner))
             }
@@ -146,6 +154,18 @@ impl CGenerator {
             }
             Type::Custom(name) => format!("struct {}", name),
             Type::Generic { name, type_args: _ } => format!("struct {}", name),
+            Type::FunctionPointer { params, return_type } => {
+                let ret = if let Some(r) = return_type {
+                    self.type_to_c(r)
+                } else {
+                    "void".to_string()
+                };
+                let param_str = params.iter()
+                    .map(|t| self.type_to_c(t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{}(*)({})", ret, param_str)
+            }
         }
     }
 
@@ -210,6 +230,12 @@ impl CGenerator {
             Statement::Continue => {
                 self.emit("continue;");
             }
+            Statement::Unsafe { body } => {
+                // Unsafe blocks: generate C code directly without additional wrapping
+                for stmt in body {
+                    self.generate_statement(stmt);
+                }
+            }
         }
     }
 
@@ -218,6 +244,14 @@ impl CGenerator {
             Expression::Literal(Literal::Integer(_)) => "int".to_string(),
             Expression::Literal(Literal::String(_)) => "const char*".to_string(),
             Expression::Literal(Literal::Boolean(_)) => "int".to_string(),
+            Expression::FunctionCall { name, .. } => {
+                // For function calls, try to infer based on known patterns
+                if name == "malloc" || name == "calloc" || name == "realloc" {
+                    "void*".to_string()
+                } else {
+                    "int".to_string()
+                }
+            }
             _ => "int".to_string(),
         }
     }
@@ -281,6 +315,59 @@ impl CGenerator {
                 format!("({} = {})", target, val_c)
             }
         }
+    }
+
+    fn generate_extern_block(&mut self, block: crate::parser::ExternBlock) {
+        self.emit(&format!("// extern \"{}\" block", block.abi));
+        for func in block.functions {
+            self.generate_extern_function(&func);
+        }
+        self.emitln();
+    }
+    
+    fn generate_extern_function(&mut self, func: &crate::parser::ExternFunction) {
+        // Skip standard C library functions that are already declared in headers
+        let stdlib_functions = [
+            "printf", "scanf", "fprintf", "sprintf", "snprintf",
+            "malloc", "free", "calloc", "realloc",
+            "strlen", "strcpy", "strcmp", "strcat",
+            "memcpy", "memset", "memmove",
+            "fopen", "fclose", "fread", "fwrite",
+            "exit", "abort", "atexit"
+        ];
+        
+        if stdlib_functions.contains(&func.name.as_str()) {
+            // Skip - already declared in standard headers
+            return;
+        }
+        
+        // Generate C function declaration
+        let return_type = if let Some(ref ty) = func.return_type {
+            self.type_to_c(ty)
+        } else {
+            "void".to_string()
+        };
+        
+        let params = if func.params.is_empty() {
+            if func.is_variadic {
+                "...".to_string()
+            } else {
+                "void".to_string()
+            }
+        } else {
+            let param_list = func.params.iter()
+                .map(|(name, ty)| format!("{} {}", self.type_to_c(ty), name))
+                .collect::<Vec<_>>()
+                .join(", ");
+            
+            if func.is_variadic {
+                format!("{}, ...", param_list)
+            } else {
+                param_list
+            }
+        };
+        
+        self.emit(&format!("extern {} {}({});", return_type, func.name, params));
     }
 }
 

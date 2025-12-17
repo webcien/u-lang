@@ -84,6 +84,9 @@ impl TypeChecker {
                 Declaration::TraitImpl(_) => {
                     // Trait implementation registration deferred to v0.9
                 }
+                Declaration::ExternBlock(_) => {
+                    // FFI: extern function registration
+                }
             }
         }
 
@@ -107,6 +110,10 @@ impl TypeChecker {
             }
             Declaration::TraitImpl(_) => {
                 // Trait implementations: method verification deferred to v0.9
+            }
+            Declaration::ExternBlock(_) => {
+                // FFI: extern blocks are validated at parse time
+                // Type checking for FFI calls happens in unsafe blocks
             }
         }
         Ok(())
@@ -186,6 +193,13 @@ impl TypeChecker {
             }
             Statement::Break | Statement::Continue => {
                 // Valid in loop context
+            }
+            Statement::Unsafe { body } => {
+                // Unsafe blocks: FFI calls and other unsafe operations
+                // Type checking is relaxed but still performed
+                for stmt in body {
+                    self.check_statement(stmt)?;
+                }
             }
         }
         Ok(())
@@ -270,6 +284,7 @@ impl TypeChecker {
             Type::I32 => "i32".to_string(),
             Type::Str => "str".to_string(),
             Type::Bool => "bool".to_string(),
+            Type::Ptr => "ptr".to_string(),
             Type::Option(inner) => format!("Option<{}>", self.type_to_string(inner)),
             Type::Result(ok, err) => format!("Result<{}, {}>", self.type_to_string(ok), self.type_to_string(err)),
             Type::Custom(name) => name.clone(),
@@ -279,6 +294,17 @@ impl TypeChecker {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("{}<{}>", name, args)
+            }
+            Type::FunctionPointer { params, return_type } => {
+                let param_str = params.iter()
+                    .map(|t| self.type_to_string(t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if let Some(ret) = return_type {
+                    format!("fn({}) -> {}", param_str, self.type_to_string(ret))
+                } else {
+                    format!("fn({})", param_str)
+                }
             }
         }
     }

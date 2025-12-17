@@ -8,12 +8,17 @@ pub enum Type {
     I32,
     Str,
     Bool,
+    Ptr,
     Option(Box<Type>),
     Result(Box<Type>, Box<Type>),
     Custom(String),
     Generic {
         name: String,
         type_args: Vec<Type>,
+    },
+    FunctionPointer {
+        params: Vec<Type>,
+        return_type: Option<Box<Type>>,
     },
 }
 
@@ -100,6 +105,9 @@ pub enum Statement {
     },
     Break,
     Continue,
+    Unsafe {
+        body: Vec<Statement>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -153,6 +161,21 @@ pub enum Declaration {
     Trait(Trait),
     TypeDef(TypeDef),
     TraitImpl(TraitImpl),
+    ExternBlock(ExternBlock),
+}
+
+#[derive(Debug, Clone)]
+pub struct ExternBlock {
+    pub abi: String,
+    pub functions: Vec<ExternFunction>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ExternFunction {
+    pub name: String,
+    pub params: Vec<(String, Type)>,
+    pub return_type: Option<Type>,
+    pub is_variadic: bool,
 }
 
 pub struct Parser {
@@ -223,7 +246,9 @@ impl Parser {
     }
 
     fn parse_declaration(&mut self) -> Result<Declaration, String> {
-        if self.match_token(TokenType::Fn) {
+        if self.match_token(TokenType::Extern) {
+            Ok(Declaration::ExternBlock(self.parse_extern_block()?))
+        } else if self.match_token(TokenType::Fn) {
             Ok(Declaration::Function(self.parse_function()?))
         } else if self.match_token(TokenType::Actor) {
             Ok(Declaration::Actor(self.parse_actor()?))
@@ -246,7 +271,7 @@ impl Parser {
                 Ok(Declaration::TraitImpl(self.parse_trait_impl()?))
             } else {
                 Err(format!(
-                    "Expected 'fn', 'actor', 'trait', 'type', or 'impl', got {:?} at line {}",
+                    "Expected 'extern', 'fn', 'actor', 'trait', 'type', or 'impl', got {:?} at line {}",
                     self.peek().kind,
                     self.peek().line
                 ))
@@ -519,12 +544,31 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
-        if self.match_token(TokenType::I32) {
+        if self.match_token(TokenType::Fn) {
+            // Function pointer: fn(T1, T2) -> R
+            self.consume(TokenType::LeftParen, "Expected '(' after 'fn'")?;
+            let mut params = Vec::new();
+            if !self.check(TokenType::RightParen) {
+                params.push(self.parse_type()?);
+                while self.match_token(TokenType::Comma) {
+                    params.push(self.parse_type()?);
+                }
+            }
+            self.consume(TokenType::RightParen, "Expected ')' after function parameters")?;
+            let return_type = if self.match_token(TokenType::Arrow) {
+                Some(Box::new(self.parse_type()?))
+            } else {
+                None
+            };
+            Ok(Type::FunctionPointer { params, return_type })
+        } else if self.match_token(TokenType::I32) {
             Ok(Type::I32)
         } else if self.match_token(TokenType::Str) {
             Ok(Type::Str)
         } else if self.match_token(TokenType::Bool) {
             Ok(Type::Bool)
+        } else if self.match_token(TokenType::Ptr) {
+            Ok(Type::Ptr)
         } else if self.match_token(TokenType::Option) {
             self.consume(TokenType::LessThan, "Expected '<' after Option")?;
             let inner = self.parse_type()?;
@@ -575,7 +619,10 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
-        if self.match_token(TokenType::If) {
+        if self.match_token(TokenType::Unsafe) {
+            let body = self.parse_block()?;
+            Ok(Statement::Unsafe { body })
+        } else if self.match_token(TokenType::If) {
             let condition = self.parse_expression()?;
             let then_branch = self.parse_block()?;
             let else_branch = if self.match_token(TokenType::Else) {
@@ -904,6 +951,89 @@ impl Parser {
                 self.peek().line
             )),
         }
+    }
+
+    fn parse_extern_block(&mut self) -> Result<ExternBlock, String> {
+        // extern "C" { ... }
+        let abi_token = self.consume(TokenType::StringLiteral(String::new()), "Expected ABI string after 'extern'")?;
+        let abi = match &abi_token.kind {
+            TokenType::StringLiteral(s) => s.clone(),
+            _ => return Err("Expected ABI string".to_string()),
+        };
+        
+        if abi != "C" {
+            return Err(format!("Only 'C' ABI is supported, got '{}'", abi));
+        }
+        
+        self.consume(TokenType::LeftBrace, "Expected '{' after ABI string")?;
+        
+        let mut functions = Vec::new();
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            functions.push(self.parse_extern_function()?);
+        }
+        
+        self.consume(TokenType::RightBrace, "Expected '}' after extern block")?;
+        
+        Ok(ExternBlock { abi, functions })
+    }
+    
+    fn parse_extern_function(&mut self) -> Result<ExternFunction, String> {
+        // fn name(params...) -> return_type;
+        self.consume(TokenType::Fn, "Expected 'fn' in extern block")?;
+        
+        let name_token = self.consume(TokenType::Identifier(String::new()), "Expected function name")?;
+        let name = match &name_token.kind {
+            TokenType::Identifier(s) => s.clone(),
+            _ => return Err("Invalid function name".to_string()),
+        };
+        
+        self.consume(TokenType::LeftParen, "Expected '(' after function name")?;
+        
+        let mut params = Vec::new();
+        let mut is_variadic = false;
+        
+        if !self.check(TokenType::RightParen) {
+            // Check for variadic (...)
+            if self.check(TokenType::Dot) {
+                self.advance(); // .
+                self.advance(); // .
+                self.advance(); // .
+                is_variadic = true;
+            } else {
+                // Parse first parameter
+                let param = self.parse_param()?;
+                params.push(param);
+                
+                while self.match_token(TokenType::Comma) {
+                    // Check for variadic after comma
+                    if self.check(TokenType::Dot) {
+                        self.advance(); // .
+                        self.advance(); // .
+                        self.advance(); // .
+                        is_variadic = true;
+                        break;
+                    }
+                    params.push(self.parse_param()?);
+                }
+            }
+        }
+        
+        self.consume(TokenType::RightParen, "Expected ')' after parameters")?;
+        
+        let return_type = if self.match_token(TokenType::Arrow) {
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
+        
+        self.consume(TokenType::Semicolon, "Expected ';' after extern function declaration")?;
+        
+        Ok(ExternFunction {
+            name,
+            params,
+            return_type,
+            is_variadic,
+        })
     }
 }
 
