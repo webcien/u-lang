@@ -2,7 +2,7 @@
 
 **Modern, Safe, and Lightweight Systems Programming Language**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/webcien/u-lang/releases/tag/v1.3.0)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/webcien/u-lang/releases/tag/v1.4.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/webcien/u-lang)
 
@@ -16,6 +16,8 @@ U is a **systems programming language** that combines the best features of moder
 - **Native GUI** with a declarative DSL (like Flutter/SwiftUI)
 - **Actor-based Concurrency** without data races (like Erlang/Pony)
 - **Modern Package Manager** for ecosystem growth (like Cargo)
+- **Full Generics Support** with monomorphization and trait bounds
+- **IDE Integration** via Language Server Protocol (LSP) and VS Code extension
 - **Cross-Platform** compilation to Linux, Windows, macOS, and WebAssembly
 
 U compiles to **clean C code** and uses **Zig** as a cross-compilation backend, resulting in:
@@ -132,7 +134,56 @@ u-std = "1.0.0"
 u-gui = { version = "1.3.0", features = ["skia"] }
 ```
 
-### 5. Cross-Platform Compilation
+### 5. Full Generics Support
+
+Write generic code that works with any type:
+
+```u
+// Generic function with trait bound
+fn print_clonable<T: Clone>(value: T) {
+    let cloned = value.clone();
+    unsafe { printf("Cloned!\n"); }
+}
+
+// Generic struct
+type Point<T> {
+    x: T,
+    y: T,
+}
+
+fn main() {
+    let p1 = Point<i32> { x: 10, y: 20 };
+    let p2 = Point<f64> { x: 1.0, y: 2.0 };
+    print_clonable(p1);
+}
+```
+
+**Monomorphization generates specialized code for each concrete type at compile time.**
+
+### 6. IDE Integration (LSP + VS Code)
+
+First-class editor support with the U Language Server:
+
+```bash
+# Install the Language Server
+cd lsp
+cargo build --release
+
+# Install VS Code extension
+cd editors/vscode
+npm install
+npm run compile
+code --install-extension u-language-1.4.0.vsix
+```
+
+**Features:**
+- ✅ Autocompletion
+- ✅ Go to definition
+- ✅ Hover information
+- ✅ Real-time diagnostics
+- ✅ Syntax highlighting
+
+### 7. Cross-Platform Compilation
 
 Compile to any platform from any platform using Zig:
 
@@ -351,11 +402,17 @@ U provides a modern standard library with common data structures:
 
 ## 📈 Roadmap
 
-### v1.4 (Q2 2026)
-- Language Server Protocol (LSP)
-- VS Code extension
-- Full generics support
-- Improved error messages
+### ✅ v1.4 (Q2 2026) - COMPLETED
+- ✅ Language Server Protocol (LSP)
+- ✅ VS Code extension
+- ✅ Full generics support
+- ✅ Improved error messages
+
+### v1.5 (Q3 2026)
+- Macro system
+- Compile-time execution
+- Advanced pattern matching
+- Module system improvements
 
 ### v2.0 (Q4 2026)
 - Async/await over actors
