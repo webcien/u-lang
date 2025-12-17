@@ -1,0 +1,88 @@
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn subtract(a: i32, b: i32) -> i32 {
+    return a - b;
+}
+
+fn multiply(a: i32, b: i32) -> i32 {
+    return a * b;
+}
+
+fn divide(a: i32, b: i32) -> i32 {
+    if b == 0 {
+        print("Error: Division by zero");
+        return 0;
+    }
+    return a / b;
+}
+
+fn power(base: i32, exp: i32) -> i32 {
+    var result = 1;
+    var i = 0;
+    while i < exp {
+        result = result * base;
+        i = i + 1;
+    }
+    return result;
+}
+
+fn factorial(n: i32) -> i32 {
+    if n <= 1 {
+        return 1;
+    }
+    var result = 1;
+    var i = 2;
+    while i <= n {
+        result = result * i;
+        i = i + 1;
+    }
+    return result;
+}
+
+fn main() {
+    print("=== U Calculator v0.8 ===");
+    print("");
+    
+    print("Basic Operations:");
+    print("----------------");
+    
+    print("Addition: 15 + 7 = ");
+    print(add(15, 7));
+    
+    print("Subtraction: 20 - 8 = ");
+    print(subtract(20, 8));
+    
+    print("Multiplication: 6 * 9 = ");
+    print(multiply(6, 9));
+    
+    print("Division: 100 / 5 = ");
+    print(divide(100, 5));
+    
+    print("");
+    print("Advanced Operations:");
+    print("-------------------");
+    
+    print("Power: 2^10 = ");
+    print(power(2, 10));
+    
+    print("Factorial: 5! = ");
+    print(factorial(5));
+    
+    print("Factorial: 10! = ");
+    print(factorial(10));
+    
+    print("");
+    print("Edge Cases:");
+    print("-----------");
+    
+    print("Division by zero: 10 / 0 = ");
+    print(divide(10, 0));
+    
+    print("Power of 0: 5^0 = ");
+    print(power(5, 0));
+    
+    print("");
+    print("=== Calculator Complete ===");
+}
