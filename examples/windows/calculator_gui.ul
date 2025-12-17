@@ -1,0 +1,77 @@
+// calculator_gui.ul — Calculator GUI application for Windows
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+
+ui calculator {
+    Container {
+        width: 300,
+        height: 400,
+        child: Column {
+            children: [
+                TextField {
+                    placeholder: "0",
+                    width: 280
+                },
+                Button { text: "7", onClick: btn_7 },
+                Button { text: "8", onClick: btn_8 },
+                Button { text: "9", onClick: btn_9 },
+                Button { text: "+", onClick: btn_add },
+                Button { text: "4", onClick: btn_4 },
+                Button { text: "5", onClick: btn_5 },
+                Button { text: "6", onClick: btn_6 },
+                Button { text: "-", onClick: btn_sub },
+                Button { text: "1", onClick: btn_1 },
+                Button { text: "2", onClick: btn_2 },
+                Button { text: "3", onClick: btn_3 },
+                Button { text: "*", onClick: btn_mul },
+                Button { text: "0", onClick: btn_0 },
+                Button { text: "=", onClick: btn_eq },
+                Button { text: "C", onClick: btn_clear },
+                Button { text: "/", onClick: btn_div }
+            ]
+        }
+    }
+}
+
+fn btn_7() { unsafe { printf("7\n"); } }
+fn btn_8() { unsafe { printf("8\n"); } }
+fn btn_9() { unsafe { printf("9\n"); } }
+fn btn_add() { unsafe { printf("+\n"); } }
+fn btn_4() { unsafe { printf("4\n"); } }
+fn btn_5() { unsafe { printf("5\n"); } }
+fn btn_6() { unsafe { printf("6\n"); } }
+fn btn_sub() { unsafe { printf("-\n"); } }
+fn btn_1() { unsafe { printf("1\n"); } }
+fn btn_2() { unsafe { printf("2\n"); } }
+fn btn_3() { unsafe { printf("3\n"); } }
+fn btn_mul() { unsafe { printf("*\n"); } }
+fn btn_0() { unsafe { printf("0\n"); } }
+fn btn_eq() { unsafe { printf("=\n"); } }
+fn btn_clear() { unsafe { printf("C\n"); } }
+fn btn_div() { unsafe { printf("/\n"); } }
+
+fn main() {
+    unsafe {
+        printf("Calculator GUI for Windows\n");
+        printf("==========================\n\n");
+        
+        skia_init();
+        let surface = skia_create_surface(300, 400);
+        let canvas = skia_get_canvas(surface);
+        
+        render_ui_calculator(canvas);
+        
+        skia_save_png(surface, "calculator_gui.png");
+        
+        printf("Calculator GUI rendered to calculator_gui.png\n");
+    }
+    
+    return 0;
+}
+
+extern "C" {
+    fn printf(format: ptr, ...);
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_save_png(surface: ptr, filename: ptr);
+}

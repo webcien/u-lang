@@ -1,0 +1,59 @@
+// hello_gui.ul — Simple GUI application for Windows
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+
+ui my_window {
+    Container {
+        width: 400,
+        height: 300,
+        child: Column {
+            children: [
+                Text {
+                    text: "Hello, Windows!",
+                    fontSize: 24
+                },
+                Button {
+                    text: "Click Me",
+                    onClick: handle_click
+                }
+            ]
+        }
+    }
+}
+
+fn handle_click() {
+    unsafe {
+        printf("Button clicked!\n");
+    }
+}
+
+fn main() {
+    unsafe {
+        printf("Starting U Language GUI on Windows...\n");
+        
+        // Initialize Skia
+        skia_init();
+        
+        // Create surface
+        let surface = skia_create_surface(400, 300);
+        let canvas = skia_get_canvas(surface);
+        
+        // Render UI
+        render_ui_my_window(canvas);
+        
+        // Save to file
+        skia_save_png(surface, "hello_gui.png");
+        
+        printf("GUI rendered to hello_gui.png\n");
+        printf("Open the file to see the result!\n");
+    }
+    
+    return 0;
+}
+
+extern "C" {
+    fn printf(format: ptr, ...);
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_save_png(surface: ptr, filename: ptr);
+}
