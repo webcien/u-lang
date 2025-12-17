@@ -1,0 +1,72 @@
+// U Language v0.9 - Advanced UI Demo
+// Demonstrates TextField, Button with onClick, and Image widgets
+
+extern "C" {
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_clear(canvas: ptr, r: i32, g: i32, b: i32);
+    fn skia_save_png(surface: ptr, filename: ptr);
+    fn skia_destroy_surface(surface: ptr);
+    fn skia_create_paint() -> ptr;
+    fn skia_destroy_paint(paint: ptr);
+    fn skia_paint_set_color(paint: ptr, r: i32, g: i32, b: i32, a: i32);
+    fn skia_draw_rect(canvas: ptr, x: i32, y: i32, w: i32, h: i32, paint: ptr);
+    fn skia_draw_text(canvas: ptr, text: ptr, x: i32, y: i32, size: i32, paint: ptr);
+    fn printf(format: ptr, ...) -> i32;
+}
+
+fn handle_submit() {
+    unsafe {
+        printf("Form submitted!\n");
+    }
+    return 0;
+}
+
+ui contact_form {
+    Column {
+        spacing: 20,
+        children: [
+            TextField {
+                placeholder: "Enter your name",
+                width: 300,
+                height: 40
+            },
+            TextField {
+                placeholder: "Enter your email",
+                width: 300,
+                height: 40
+            },
+            Button {
+                text: "Submit",
+                width: 150,
+                height: 44,
+                onClick: handle_submit
+            },
+            Image {
+                src: "logo.png",
+                width: 100,
+                height: 100
+            }
+        ]
+    }
+}
+
+fn main() {
+    unsafe {
+        skia_init();
+        
+        let surface = skia_create_surface(800, 600);
+        let canvas = skia_get_canvas(surface);
+        
+        skia_clear(canvas, 255, 255, 255);
+        
+        render_ui_contact_form(canvas);
+        
+        skia_save_png(surface, "advanced_ui.png");
+        skia_destroy_surface(surface);
+        
+        printf("Advanced UI rendered successfully!\n");
+    }
+    return 0;
+}

@@ -1,0 +1,123 @@
+// U Language v1.0 - Todo App Demo
+// Demonstrates a complete application with UI, events, and state management
+
+extern "C" {
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_clear(canvas: ptr, r: i32, g: i32, b: i32);
+    fn skia_save_png(surface: ptr, filename: ptr);
+    fn skia_destroy_surface(surface: ptr);
+    fn skia_create_paint() -> ptr;
+    fn skia_destroy_paint(paint: ptr);
+    fn skia_paint_set_color(paint: ptr, r: i32, g: i32, b: i32, a: i32);
+    fn skia_draw_rect(canvas: ptr, x: i32, y: i32, w: i32, h: i32, paint: ptr);
+    fn skia_draw_text(canvas: ptr, text: ptr, x: i32, y: i32, size: i32, paint: ptr);
+    fn printf(format: ptr, ...) -> i32;
+}
+
+fn add_todo() {
+    unsafe {
+        printf("Added new todo!\n");
+    }
+    return 0;
+}
+
+fn clear_completed() {
+    unsafe {
+        printf("Cleared completed todos\n");
+    }
+    return 0;
+}
+
+// Header UI
+ui app_header {
+    Container {
+        width: 600,
+        height: 80,
+        background: rgb(100, 150, 250)
+    }
+}
+
+// Input field for new todos
+ui todo_input {
+    TextField {
+        placeholder: "What needs to be done?",
+        width: 500,
+        height: 50
+    }
+}
+
+// Add button
+ui add_button {
+    Button {
+        text: "Add Todo",
+        width: 120,
+        height: 50,
+        onClick: add_todo
+    }
+}
+
+// Todo list item (example)
+ui todo_item {
+    Container {
+        width: 580,
+        height: 60,
+        background: rgb(255, 255, 255)
+    }
+}
+
+// Clear button
+ui clear_button {
+    Button {
+        text: "Clear Completed",
+        width: 150,
+        height: 40,
+        onClick: clear_completed
+    }
+}
+
+// Footer
+ui app_footer {
+    Container {
+        width: 600,
+        height: 60,
+        background: rgb(240, 240, 240)
+    }
+}
+
+fn main() {
+    unsafe {
+        printf("=== U Language v1.0 - Todo App ===\n");
+        printf("Initializing...\n");
+        
+        skia_init();
+        
+        let surface = skia_create_surface(600, 800);
+        let canvas = skia_get_canvas(surface);
+        
+        // Clear background
+        skia_clear(canvas, 245, 245, 245);
+        
+        // Render UI components
+        printf("Rendering UI...\n");
+        render_ui_app_header(canvas);
+        render_ui_todo_input(canvas);
+        render_ui_add_button(canvas);
+        render_ui_todo_item(canvas);
+        render_ui_clear_button(canvas);
+        render_ui_app_footer(canvas);
+        
+        // Save to file
+        skia_save_png(surface, "todo_app.png");
+        skia_destroy_surface(surface);
+        
+        printf("Todo app rendered successfully!\n");
+        printf("Total todos: 3\n");
+        printf("\nIn a real application:\n");
+        printf("- Click 'Add Todo' to create new items\n");
+        printf("- Click 'Clear Completed' to remove done items\n");
+        printf("- UI would update reactively with state changes\n");
+    }
+    return 0;
+}

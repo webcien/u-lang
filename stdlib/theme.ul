@@ -1,0 +1,44 @@
+// U Language Standard Library - Theme System
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+
+// Theme colors
+fn theme_primary_color() -> i32 {
+    return 0x6495ED; // Cornflower blue
+}
+
+fn theme_secondary_color() -> i32 {
+    return 0xFF6347; // Tomato red
+}
+
+fn theme_background_color() -> i32 {
+    return 0xF5F5F5; // White smoke
+}
+
+fn theme_text_color() -> i32 {
+    return 0x333333; // Dark gray
+}
+
+fn theme_border_color() -> i32 {
+    return 0xCCCCCC; // Light gray
+}
+
+// Theme sizes
+fn theme_button_height() -> i32 {
+    return 44;
+}
+
+fn theme_text_size() -> i32 {
+    return 16;
+}
+
+fn theme_heading_size() -> i32 {
+    return 24;
+}
+
+fn theme_border_radius() -> i32 {
+    return 8;
+}
+
+fn theme_spacing() -> i32 {
+    return 16;
+}

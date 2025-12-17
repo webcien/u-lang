@@ -1,6 +1,6 @@
 [package]
 name = "u"
-version = "0.6.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Webcien <u-lang@webcien.com>"]
 description = "U: A modern, safe, and lightweight systems programming language."

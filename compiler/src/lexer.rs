@@ -19,6 +19,9 @@ pub enum TokenType {
     Else,
     Extern,
     Unsafe,
+    Ui,
+    Child,
+    Children,
 
     // Literals
     Identifier(String),
@@ -29,6 +32,8 @@ pub enum TokenType {
     RightParen,     // )
     LeftBrace,      // {
     RightBrace,     // }
+    LeftBracket,    // [
+    RightBracket,   // ]
     Comma,          // ,
     Semicolon,      // ;
     Dot,            // .
@@ -241,6 +246,16 @@ impl Lexer {
                 line,
                 column,
             },
+            '[' => Token {
+                kind: TokenType::LeftBracket,
+                line,
+                column,
+            },
+            ']' => Token {
+                kind: TokenType::RightBracket,
+                line,
+                column,
+            },
             ',' => Token {
                 kind: TokenType::Comma,
                 line,
@@ -397,6 +412,9 @@ impl Lexer {
                     "else" => TokenType::Else,
                     "extern" => TokenType::Extern,
                     "unsafe" => TokenType::Unsafe,
+                    "ui" => TokenType::Ui,
+                    "child" => TokenType::Child,
+                    "children" => TokenType::Children,
                     "i32" => TokenType::I32,
                     "str" => TokenType::Str,
                     "bool" => TokenType::Bool,

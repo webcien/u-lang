@@ -162,6 +162,31 @@ pub enum Declaration {
     TypeDef(TypeDef),
     TraitImpl(TraitImpl),
     ExternBlock(ExternBlock),
+    UiBlock(UiBlock),
+}
+
+#[derive(Debug, Clone)]
+pub struct UiBlock {
+    pub name: String,
+    pub root: Widget,
+}
+
+#[derive(Debug, Clone)]
+pub struct Widget {
+    pub widget_type: String,
+    pub properties: Vec<(String, WidgetValue)>,
+}
+
+#[derive(Debug, Clone)]
+pub enum WidgetValue {
+    Int(u32),
+    String(String),
+    Color { r: u32, g: u32, b: u32 },
+    Identifier(String),
+    Widget(Box<Widget>),
+    WidgetList(Vec<Widget>),
+    Boolean(bool),
+    Float(f32),
 }
 
 #[derive(Debug, Clone)]
@@ -246,7 +271,9 @@ impl Parser {
     }
 
     fn parse_declaration(&mut self) -> Result<Declaration, String> {
-        if self.match_token(TokenType::Extern) {
+        if self.match_token(TokenType::Ui) {
+            Ok(Declaration::UiBlock(self.parse_ui_block()?))
+        } else if self.match_token(TokenType::Extern) {
             Ok(Declaration::ExternBlock(self.parse_extern_block()?))
         } else if self.match_token(TokenType::Fn) {
             Ok(Declaration::Function(self.parse_function()?))
@@ -1034,6 +1061,145 @@ impl Parser {
             return_type,
             is_variadic,
         })
+    }
+
+    fn parse_ui_block(&mut self) -> Result<UiBlock, String> {
+        // ui <name> { <widget> }
+        let name = if let TokenType::Identifier(s) = &self.peek().kind {
+            let n = s.clone();
+            self.advance();
+            n
+        } else {
+            return Err(format!("Expected UI block name at line {}", self.peek().line));
+        };
+        
+        self.consume(TokenType::LeftBrace, "Expected '{' after UI block name")?;
+        let root = self.parse_widget()?;
+        self.consume(TokenType::RightBrace, "Expected '}' after UI block")?;
+        
+        Ok(UiBlock { name, root })
+    }
+
+    fn parse_widget(&mut self) -> Result<Widget, String> {
+        // WidgetName { prop: value, ... }
+        let widget_type = if let TokenType::Identifier(s) = &self.peek().kind {
+            let t = s.clone();
+            self.advance();
+            t
+        } else {
+            return Err(format!("Expected widget type at line {}", self.peek().line));
+        };
+        
+        self.consume(TokenType::LeftBrace, "Expected '{' after widget type")?;
+        
+        let mut properties = Vec::new();
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            let prop_name = if let TokenType::Identifier(s) = &self.peek().kind {
+                let n = s.clone();
+                self.advance();
+                n
+            } else {
+                return Err(format!("Expected property name at line {}", self.peek().line));
+            };
+            
+            self.consume(TokenType::Colon, "Expected ':' after property name")?;
+            
+            let value = self.parse_widget_value()?;
+            properties.push((prop_name, value));
+            
+            // Comma is optional before closing brace
+            if self.check(TokenType::Comma) {
+                self.advance();
+            }
+        }
+        
+        self.consume(TokenType::RightBrace, "Expected '}' after widget properties")?;
+        
+        Ok(Widget { widget_type, properties })
+    }
+
+    fn parse_widget_value(&mut self) -> Result<WidgetValue, String> {
+        // Can be: int, string, rgb(r,g,b), identifier, widget, [widget, ...]
+        
+        // Check if it's a widget (starts with uppercase identifier)
+        if let TokenType::Identifier(s) = &self.peek().kind {
+            if s.chars().next().unwrap_or('a').is_uppercase() {
+                // It's a widget type
+                let widget = self.parse_widget()?;
+                return Ok(WidgetValue::Widget(Box::new(widget)));
+            }
+        }
+        
+        if let TokenType::IntegerLiteral(n) = self.peek().kind {
+            self.advance();
+            Ok(WidgetValue::Int(n))
+        } else if let TokenType::StringLiteral(s) = &self.peek().kind {
+            let val = s.clone();
+            self.advance();
+            Ok(WidgetValue::String(val))
+        } else if let TokenType::Identifier(s) = &self.peek().kind {
+            let ident = s.clone();
+            self.advance();
+            
+            // Check for boolean literals
+            if ident == "true" {
+                return Ok(WidgetValue::Boolean(true));
+            } else if ident == "false" {
+                return Ok(WidgetValue::Boolean(false));
+            }
+            
+            // Check if it's rgb(...)
+            if ident == "rgb" && self.check(TokenType::LeftParen) {
+                self.advance(); // consume '('
+                let r = if let TokenType::IntegerLiteral(n) = self.peek().kind {
+                    self.advance();
+                    n
+                } else {
+                    return Err(format!("Expected integer for red component at line {}", self.peek().line));
+                };
+                self.consume(TokenType::Comma, "Expected ',' in rgb()")?;
+                
+                let g = if let TokenType::IntegerLiteral(n) = self.peek().kind {
+                    self.advance();
+                    n
+                } else {
+                    return Err(format!("Expected integer for green component at line {}", self.peek().line));
+                };
+                self.consume(TokenType::Comma, "Expected ',' in rgb()")?;
+                
+                let b = if let TokenType::IntegerLiteral(n) = self.peek().kind {
+                    self.advance();
+                    n
+                } else {
+                    return Err(format!("Expected integer for blue component at line {}", self.peek().line));
+                };
+                self.consume(TokenType::RightParen, "Expected ')' after rgb()")?;
+                
+                Ok(WidgetValue::Color { r, g, b })
+            } else if self.check(TokenType::LeftBrace) {
+                // It's a nested widget
+                // Rewind to parse it properly
+                self.current -= 1;
+                let widget = self.parse_widget()?;
+                Ok(WidgetValue::Widget(Box::new(widget)))
+            } else {
+                // It's just an identifier (e.g., function reference)
+                Ok(WidgetValue::Identifier(ident))
+            }
+        } else if self.match_token(TokenType::LeftBracket) {
+            // Array of widgets
+            let mut widgets = Vec::new();
+            while !self.check(TokenType::RightBracket) && !self.is_at_end() {
+                widgets.push(self.parse_widget()?);
+                if !self.check(TokenType::RightBracket) {
+                    self.consume(TokenType::Comma, "Expected ',' between widgets in array")?;
+                }
+            }
+            self.consume(TokenType::RightBracket, "Expected ']' after widget array")?;
+            Ok(WidgetValue::WidgetList(widgets))
+        } else {
+            Err(format!("Unexpected token in widget value at line {}", self.peek().line))
+        }
     }
 }
 

@@ -1,0 +1,53 @@
+// U Language v0.9 - UI DSL Demo
+// Demonstrates declarative UI with Skia backend
+
+extern "C" {
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_clear(canvas: ptr, r: i32, g: i32, b: i32);
+    fn skia_save_png(surface: ptr, filename: ptr);
+    fn skia_destroy_surface(surface: ptr);
+    fn skia_create_paint() -> ptr;
+    fn skia_destroy_paint(paint: ptr);
+    fn skia_paint_set_color(paint: ptr, r: i32, g: i32, b: i32, a: i32);
+    fn skia_draw_rect(canvas: ptr, x: i32, y: i32, w: i32, h: i32, paint: ptr);
+    fn skia_draw_text(canvas: ptr, text: ptr, x: i32, y: i32, size: i32, paint: ptr);
+}
+
+// Define the UI using declarative DSL
+ui my_app {
+    Container {
+        width: 400,
+        height: 300,
+        background: rgb(240, 240, 250),
+        child: Text {
+            content: "Hello from U DSL!",
+            fontSize: 24,
+            color: rgb(50, 50, 50)
+        }
+    }
+}
+
+fn main() {
+    unsafe {
+        skia_init();
+        
+        let surface = skia_create_surface(400, 300);
+        let canvas = skia_get_canvas(surface);
+        
+        // Clear background
+        skia_clear(canvas, 255, 255, 255);
+        
+        // Render the UI
+        render_ui_my_app(canvas);
+        
+        // Save to file
+        skia_save_png(surface, "ui_demo.png");
+        
+        // Cleanup
+        skia_destroy_surface(surface);
+        
+        core::print("UI rendered successfully to ui_demo.png");
+    }
+}

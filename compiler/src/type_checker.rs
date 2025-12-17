@@ -87,6 +87,9 @@ impl TypeChecker {
                 Declaration::ExternBlock(_) => {
                     // FFI: extern function registration
                 }
+                Declaration::UiBlock(_) => {
+                    // UI DSL: widget validation deferred to later
+                }
             }
         }
 
@@ -114,6 +117,9 @@ impl TypeChecker {
             Declaration::ExternBlock(_) => {
                 // FFI: extern blocks are validated at parse time
                 // Type checking for FFI calls happens in unsafe blocks
+            }
+            Declaration::UiBlock(_) => {
+                // UI DSL: widget type checking deferred to later
             }
         }
         Ok(())
