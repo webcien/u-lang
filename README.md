@@ -2,7 +2,7 @@
 
 **Modern, Safe, and Lightweight Systems Programming Language**
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/webcien/u-lang/releases/tag/v1.4.0)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/webcien/u-lang/releases/tag/v1.5.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/webcien/u-lang)
 
