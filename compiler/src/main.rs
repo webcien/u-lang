@@ -9,6 +9,8 @@ use std::path::Path;
 mod lexer;
 mod parser;
 mod type_checker;
+mod ownership_checker;
+mod concurrency_checker;
 mod codegen;
 mod actor_runtime;
 mod traits;
@@ -124,11 +126,25 @@ fn build_command(input: &str, target: &str, no_link: bool) -> Result<(), Box<dyn
     let mut parser = parser::Parser::new(tokens);
     let declarations = parser.parse()?;
 
-    // 4. Type & Ownership Checking
-    let mut checker = type_checker::TypeChecker::new();
-    checker.check_program(declarations.clone())?;
+    // 4. Type Checking
+    let mut type_checker = type_checker::TypeChecker::new();
+    type_checker.check_program(declarations.clone())?;
+    
+    // 5. Ownership Checking
+    let mut ownership_checker = ownership_checker::OwnershipChecker::new();
+    if let Err(e) = ownership_checker.check_program(&declarations) {
+        eprintln!("❌ Ownership error: {}", e);
+        std::process::exit(1);
+    }
+    
+    // 6. Concurrency Checking (for actors)
+    let mut concurrency_checker = concurrency_checker::ConcurrencyChecker::new();
+    if let Err(e) = concurrency_checker.check_program(&declarations) {
+        eprintln!("❌ Concurrency error: {}", e);
+        std::process::exit(1);
+    }
 
-    // 5. C code generation
+    // 7. C code generation
     let mut codegen = codegen::c::CGenerator::new();
     let c_code = codegen.generate_program(declarations);
 

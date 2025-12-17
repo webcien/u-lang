@@ -1,0 +1,123 @@
+extern "C" {
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_save_png(surface: ptr, filename: ptr);
+    fn printf(format: ptr, ...);
+}
+
+// Button click handler with ownership transfer
+fn handle_submit_click() {
+    unsafe {
+        printf("Submit button clicked!\n");
+    }
+    return 0;
+}
+
+fn handle_cancel_click() {
+    unsafe {
+        printf("Cancel button clicked!\n");
+    }
+    return 0;
+}
+
+// UI definition with ownership-safe state management
+ui main_window {
+    Container {
+        width: 800,
+        height: 600,
+        background: rgb(245, 245, 250),
+        child: Column {
+            spacing: 20,
+            children: [
+                // Header
+                Container {
+                    width: 800,
+                    height: 80,
+                    background: rgb(50, 100, 200),
+                    child: Text {
+                        content: "U Language - Safe GUI",
+                        size: 28,
+                        color: rgb(255, 255, 255)
+                    }
+                },
+                
+                // Form section
+                Container {
+                    width: 600,
+                    height: 300,
+                    background: rgb(255, 255, 255),
+                    child: Column {
+                        spacing: 15,
+                        children: [
+                            Text {
+                                content: "User Registration",
+                                size: 20,
+                                color: rgb(50, 50, 50)
+                            },
+                            TextField {
+                                placeholder: "Enter your name",
+                                width: 500
+                            },
+                            TextField {
+                                placeholder: "Enter your email",
+                                width: 500
+                            },
+                            Row {
+                                spacing: 10,
+                                children: [
+                                    Button {
+                                        text: "Submit",
+                                        onClick: handle_submit_click,
+                                        width: 120,
+                                        height: 40
+                                    },
+                                    Button {
+                                        text: "Cancel",
+                                        onClick: handle_cancel_click,
+                                        width: 120,
+                                        height: 40
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                
+                // Status section
+                Container {
+                    width: 600,
+                    height: 100,
+                    background: rgb(240, 248, 255),
+                    child: Text {
+                        content: "Memory-safe UI with ownership tracking",
+                        size: 14,
+                        color: rgb(100, 100, 100)
+                    }
+                }
+            ]
+        }
+    }
+}
+
+fn main() {
+    // Ownership: surface is owned by main
+    let surface: ptr;
+    let canvas: ptr;
+    
+    unsafe {
+        skia_init();
+        surface = skia_create_surface(800, 600);
+        canvas = skia_get_canvas(surface);
+        
+        // Render UI (ownership of canvas is borrowed here)
+        render_ui_main_window(canvas);
+        
+        // Save output
+        skia_save_png(surface, "gui_with_ownership.png");
+        
+        printf("GUI rendered with ownership safety!\n");
+    }
+    
+    return 0;
+}

@@ -1,0 +1,29 @@
+extern "C" {
+    fn printf(format: ptr, ...);
+}
+
+fn safe_function(x: i32) {
+    unsafe {
+        printf("Value: %d\n", x);
+    }
+    return 0;
+}
+
+ui simple_ui {
+    Container {
+        width: 200,
+        height: 200,
+        background: rgb(200, 200, 200)
+    }
+}
+
+fn main() {
+    let value = 42;
+    safe_function(value);
+    
+    unsafe {
+        printf("Integration test complete!\n");
+    }
+    
+    return 0;
+}

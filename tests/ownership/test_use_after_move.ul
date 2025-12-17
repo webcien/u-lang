@@ -1,0 +1,10 @@
+fn consume(x: i32) {
+    return 0;
+}
+
+fn main() {
+    let x = 42;
+    consume(x);
+    let y = x;
+    return 0;
+}

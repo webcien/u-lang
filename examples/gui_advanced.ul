@@ -1,0 +1,80 @@
+extern "C" {
+    fn skia_init();
+    fn skia_create_surface(width: i32, height: i32) -> ptr;
+    fn skia_get_canvas(surface: ptr) -> ptr;
+    fn skia_save_png(surface: ptr, filename: ptr);
+    fn printf(format: ptr, ...);
+}
+
+fn handle_click() {
+    unsafe {
+        printf("Button clicked!\n");
+    }
+    return 0;
+}
+
+ui advanced_window {
+    Container {
+        width: 800,
+        height: 600,
+        background: rgb(240, 240, 245),
+        child: Column {
+            spacing: 20,
+            children: [
+                Container {
+                    width: 800,
+                    height: 80,
+                    background: rgb(60, 120, 220),
+                    child: Text {
+                        content: "Advanced GUI Demo",
+                        size: 28,
+                        color: rgb(255, 255, 255)
+                    }
+                },
+                Container {
+                    width: 600,
+                    height: 400,
+                    background: rgb(255, 255, 255),
+                    child: Column {
+                        spacing: 15,
+                        children: [
+                            Text {
+                                content: "Form Example",
+                                size: 20
+                            },
+                            TextField {
+                                placeholder: "Name",
+                                width: 500
+                            },
+                            TextField {
+                                placeholder: "Email",
+                                width: 500
+                            },
+                            Button {
+                                text: "Submit",
+                                onClick: handle_click,
+                                width: 120
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}
+
+fn main() {
+    let surface: ptr;
+    let canvas: ptr;
+    
+    unsafe {
+        skia_init();
+        surface = skia_create_surface(800, 600);
+        canvas = skia_get_canvas(surface);
+        render_ui_advanced_window(canvas);
+        skia_save_png(surface, "gui_advanced.png");
+        printf("Advanced GUI rendered!\n");
+    }
+    
+    return 0;
+}
