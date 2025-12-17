@@ -1,0 +1,186 @@
+// clone.ul — Clone trait for deep copying
+// MIT License — Copyright (c) 2025 Webcien and U contributors
+//
+// The Clone trait provides a mechanism for explicit deep copies of values.
+// Types that implement Clone can be duplicated using the `.clone()` method.
+
+// ============================================================================
+// Clone Trait Definition
+// ============================================================================
+
+trait Clone {
+    fn clone(&self) -> Self;
+}
+
+// ============================================================================
+// Clone Implementations for Primitive Types
+// ============================================================================
+
+// i32 is Copy, but we provide clone for consistency
+impl Clone for i32 {
+    fn clone(&self) -> i32 {
+        return *self;
+    }
+}
+
+// i64 is Copy, but we provide clone for consistency
+impl Clone for i64 {
+    fn clone(&self) -> i64 {
+        return *self;
+    }
+}
+
+// f64 is Copy, but we provide clone for consistency
+impl Clone for f64 {
+    fn clone(&self) -> f64 {
+        return *self;
+    }
+}
+
+// bool is Copy, but we provide clone for consistency
+impl Clone for bool {
+    fn clone(&self) -> bool {
+        return *self;
+    }
+}
+
+// ============================================================================
+// Clone Implementation for String
+// ============================================================================
+
+extern "C" {
+    fn malloc(size: i32) -> ptr;
+    fn strcpy(dest: ptr, src: ptr) -> ptr;
+    fn strlen(s: ptr) -> i32;
+}
+
+impl Clone for str {
+    fn clone(&self) -> str {
+        unsafe {
+            let len = strlen(self);
+            let new_str = malloc(len + 1);
+            strcpy(new_str, self);
+            return new_str;
+        }
+    }
+}
+
+// ============================================================================
+// Clone Implementation for Option<T>
+// ============================================================================
+
+impl<T: Clone> Clone for Option<T> {
+    fn clone(&self) -> Option<T> {
+        match self {
+            Some(value) => Some(value.clone()),
+            None => None
+        }
+    }
+}
+
+// ============================================================================
+// Clone Implementation for Result<T, E>
+// ============================================================================
+
+impl<T: Clone, E: Clone> Clone for Result<T, E> {
+    fn clone(&self) -> Result<T, E> {
+        match self {
+            Ok(value) => Ok(value.clone()),
+            Err(error) => Err(error.clone())
+        }
+    }
+}
+
+// ============================================================================
+// Clone Implementation for Vec<T>
+// ============================================================================
+
+impl<T: Clone> Clone for Vec<T> {
+    fn clone(&self) -> Vec<T> {
+        let new_vec = Vec_with_capacity<T>(self.capacity);
+        for i in 0..self.len {
+            let item = Vec_get(self, i);
+            if is_some(item) {
+                let value = unwrap(item);
+                new_vec = Vec_push(new_vec, value.clone());
+            }
+        }
+        return new_vec;
+    }
+}
+
+// ============================================================================
+// Clone Implementation for HashMap<K, V>
+// ============================================================================
+
+impl<K: Clone, V: Clone> Clone for HashMap<K, V> {
+    fn clone(&self) -> HashMap<K, V> {
+        let new_map = HashMap_with_capacity<K, V>(self.capacity);
+        // Iterate over all entries and clone them
+        for i in 0..self.capacity {
+            if self.entries[i].occupied {
+                let key = self.entries[i].key.clone();
+                let value = self.entries[i].value.clone();
+                new_map = HashMap_insert(new_map, key, value);
+            }
+        }
+        return new_map;
+    }
+}
+
+// ============================================================================
+// Usage Examples
+// ============================================================================
+
+// Example 1: Cloning a string
+fn example_clone_string() {
+    let s1 = "hello";
+    let s2 = s1.clone(); // s2 is a new, independent string
+    
+    unsafe {
+        printf("s1: %s\n", s1);
+        printf("s2: %s\n", s2);
+    }
+    
+    return 0;
+}
+
+// Example 2: Cloning a vector
+fn example_clone_vec() {
+    let mut v1 = Vec_new<i32>();
+    v1 = Vec_push(v1, 10);
+    v1 = Vec_push(v1, 20);
+    
+    let v2 = v1.clone(); // v2 is a new, independent vector
+    
+    let len1 = Vec_len(v1);
+    let len2 = Vec_len(v2);
+    
+    unsafe {
+        printf("v1 length: %d\n", len1);
+        printf("v2 length: %d\n", len2);
+    }
+    
+    Vec_drop(v1);
+    Vec_drop(v2);
+    
+    return 0;
+}
+
+// Example 3: Cloning an Option
+fn example_clone_option() {
+    let opt1 = Some(42);
+    let opt2 = opt1.clone(); // opt2 is a new Option with the same value
+    
+    if is_some(opt1) && is_some(opt2) {
+        let val1 = unwrap(opt1);
+        let val2 = unwrap(opt2);
+        
+        unsafe {
+            printf("opt1: %d\n", val1);
+            printf("opt2: %d\n", val2);
+        }
+    }
+    
+    return 0;
+}

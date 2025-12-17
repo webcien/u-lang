@@ -12,6 +12,7 @@ mod type_checker;
 mod ownership_checker;
 mod concurrency_checker;
 mod optimizer;
+mod package_manager;
 mod codegen;
 mod actor_runtime;
 mod traits;
