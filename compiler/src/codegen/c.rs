@@ -246,11 +246,20 @@ impl CGenerator {
             Expression::Literal(Literal::Boolean(_)) => "int".to_string(),
             Expression::FunctionCall { name, .. } => {
                 // For function calls, try to infer based on known patterns
+                // Memory allocation functions
                 if name == "malloc" || name == "calloc" || name == "realloc" {
-                    "void*".to_string()
-                } else {
-                    "int".to_string()
+                    return "void*".to_string();
                 }
+                
+                // Skia functions that return pointers
+                if name.starts_with("u_skia_") {
+                    if name.contains("create") || name.contains("get_") || name.contains("version") {
+                        return "void*".to_string();
+                    }
+                }
+                
+                // Default to int
+                "int".to_string()
             }
             _ => "int".to_string(),
         }

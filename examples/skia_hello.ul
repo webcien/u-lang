@@ -1,0 +1,55 @@
+extern "C" {
+    fn u_skia_init();
+    fn u_skia_shutdown();
+    fn u_skia_version() -> ptr;
+    fn u_skia_surface_create(width: i32, height: i32) -> ptr;
+    fn u_skia_surface_destroy(surface: ptr);
+    fn u_skia_surface_get_canvas(surface: ptr) -> ptr;
+    fn u_skia_surface_save_png(surface: ptr, path: ptr) -> i32;
+    fn u_skia_canvas_clear(canvas: ptr, r: i32, g: i32, b: i32, a: i32);
+    fn u_skia_canvas_draw_rect(canvas: ptr, left: i32, top: i32, right: i32, bottom: i32, paint: ptr);
+    fn u_skia_canvas_draw_circle(canvas: ptr, cx: i32, cy: i32, radius: i32, paint: ptr);
+    fn u_skia_paint_create() -> ptr;
+    fn u_skia_paint_destroy(paint: ptr);
+    fn u_skia_paint_set_color(paint: ptr, r: i32, g: i32, b: i32, a: i32);
+    fn u_skia_paint_set_antialias(paint: ptr, enabled: i32);
+    fn printf(format: ptr, ...) -> i32;
+}
+
+fn main() {
+    unsafe {
+        printf("=== U Language Skia Demo ===\n");
+        
+        u_skia_init();
+        
+        var version = u_skia_version();
+        printf("Skia version: %s\n", version);
+        
+        var surface = u_skia_surface_create(800, 600);
+        var canvas = u_skia_surface_get_canvas(surface);
+        
+        u_skia_canvas_clear(canvas, 1, 1, 1, 1);
+        
+        var paint = u_skia_paint_create();
+        u_skia_paint_set_antialias(paint, 1);
+        
+        u_skia_paint_set_color(paint, 1, 0, 0, 1);
+        u_skia_canvas_draw_rect(canvas, 100, 100, 300, 200, paint);
+        
+        u_skia_paint_set_color(paint, 0, 1, 0, 1);
+        u_skia_canvas_draw_circle(canvas, 400, 300, 80, paint);
+        
+        u_skia_paint_set_color(paint, 0, 0, 1, 1);
+        u_skia_canvas_draw_circle(canvas, 600, 400, 60, paint);
+        
+        u_skia_surface_save_png(surface, "output.png");
+        printf("Rendered to output.png\n");
+        
+        u_skia_paint_destroy(paint);
+        u_skia_surface_destroy(surface);
+        u_skia_shutdown();
+        
+        printf("=== Demo Complete ===\n");
+    }
+    return 0;
+}
